@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PayLedger — Back Office</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0f1117; --surface: #1a1d27; --surface2: #22263a; --border: #2e3248;
+      --accent: #22c55e; --accent2: #4ade80; --text: #e2e8f0; --muted: #64748b;
+      --font: 'Segoe UI', system-ui, sans-serif;
+    }
+    body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; }
+    .app { display: flex; min-height: 100vh; }
+    .sidebar {
+      width: 240px; background: var(--surface); border-right: 1px solid var(--border);
+      padding: 24px 0; display: flex; flex-direction: column; position: fixed; height: 100vh; z-index: 10;
+    }
+    .logo { padding: 0 20px 24px; border-bottom: 1px solid var(--border); }
+    .logo h1 { font-size: 16px; font-weight: 700; color: var(--accent2); }
+    .logo p { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .logo a { font-size: 11px; color: var(--muted); text-decoration: none; display: block; margin-top: 6px; }
+    .logo a:hover { color: var(--text); }
+    .nav { margin-top: 16px; flex: 1; }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px; padding: 10px 20px;
+      cursor: pointer; font-size: 14px; color: var(--muted); transition: all 0.15s;
+      border-left: 3px solid transparent;
+    }
+    .nav-item:hover { color: var(--text); background: var(--surface2); }
+    .nav-item.active { color: var(--accent2); border-left-color: var(--accent); background: rgba(34,197,94,0.08); }
+    .nav-item .icon { font-size: 16px; width: 20px; text-align: center; }
+    .main { margin-left: 240px; flex: 1; padding: 28px; }
+    .page-header { margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; }
+    .page-header h2 { font-size: 22px; font-weight: 700; }
+    .page-header p { font-size: 13px; color: var(--muted); margin-top: 3px; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 600; }
+    .badge-green { background: rgba(34,197,94,0.15); color: #22c55e; }
+    .badge-red   { background: rgba(239,68,68,0.15); color: #ef4444; }
+    .badge-yellow { background: rgba(245,158,11,0.15); color: #f59e0b; }
+    .badge-blue  { background: rgba(99,102,241,0.15); color: #818cf8; }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 28px; }
+    .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; position: relative; overflow: hidden; }
+    .stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+    .stat-card.blue::before { background: #6366f1; }
+    .stat-card.green::before { background: #22c55e; }
+    .stat-card.yellow::before { background: #f59e0b; }
+    .stat-card.red::before { background: #ef4444; }
+    .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+    .stat-value { font-size: 28px; font-weight: 700; margin-top: 6px; }
+    .stat-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+    .section { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 20px; }
+    .section-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .section-header h3 { font-size: 15px; font-weight: 600; }
+    .section-body { padding: 20px; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    label { font-size: 12px; color: var(--muted); font-weight: 500; }
+    input, select { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; color: var(--text); font-size: 13px; outline: none; transition: border-color 0.15s; font-family: var(--font); width: 100%; }
+    input:focus, select:focus { border-color: var(--accent); }
+    select option { background: var(--surface2); }
+    .btn { padding: 9px 18px; border-radius: 8px; border: none; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.15s; font-family: var(--font); }
+    .btn-primary { background: var(--accent); color: #0f1117; }
+    .btn-primary:hover { background: var(--accent2); }
+    .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+    .btn-secondary:hover { border-color: var(--accent); }
+    .btn-sm { padding: 5px 10px; font-size: 12px; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { padding: 10px 14px; text-align: left; color: var(--muted); font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
+    td { padding: 12px 14px; border-bottom: 1px solid var(--border); }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(255,255,255,0.02); }
+    .mono { font-family: 'Courier New', monospace; font-size: 12px; color: #818cf8; }
+    .empty { text-align: center; padding: 40px; color: var(--muted); font-size: 14px; }
+    .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; margin-right: 6px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .page { display: none; } .page.active { display: block; }
+    .refresh-btn { background: none; border: 1px solid var(--border); color: var(--muted); border-radius: 6px; padding: 5px 10px; cursor: pointer; font-size: 12px; }
+    .refresh-btn:hover { color: var(--text); border-color: var(--accent); }
+    #toast-container { position: fixed; top: 20px; right: 20px; z-index: 999; display: flex; flex-direction: column; gap: 8px; }
+    .toast { padding: 12px 18px; border-radius: 8px; font-size: 13px; font-weight: 500; min-width: 280px; animation: slideIn 0.3s ease; border: 1px solid transparent; }
+    .toast-success { background: rgba(34,197,94,0.15); color: #22c55e; border-color: rgba(34,197,94,0.3); }
+    .toast-error   { background: rgba(239,68,68,0.15); color: #ef4444; border-color: rgba(239,68,68,0.3); }
+    .toast-info    { background: rgba(99,102,241,0.15); color: #818cf8; border-color: rgba(99,102,241,0.3); }
+    @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    .hidden { display: none !important; }
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 100; display: flex; align-items: center; justify-content: center; }
+    .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 28px; min-width: 420px; max-width: 560px; width: 100%; max-height: 90vh; overflow-y: auto; }
+    .modal h3 { font-size: 17px; font-weight: 700; margin-bottom: 20px; }
+    .close-btn { float: right; background: none; border: none; color: var(--muted); font-size: 18px; cursor: pointer; margin-top: -4px; }
+    .info-row { display: flex; gap: 8px; align-items: baseline; margin-bottom: 8px; }
+    .info-label { font-size: 12px; color: var(--muted); min-width: 160px; }
+    .divider { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+    .acct-chip { display: inline-block; background: rgba(99,102,241,0.12); color: #818cf8; border-radius: 4px; padding: 2px 7px; font-size: 11px; font-family: monospace; cursor: pointer; }
+    .acct-chip:hover { background: rgba(99,102,241,0.25); }
+  </style>
+</head>
+<body>
+<div id="toast-container"></div>
+
+<div id="acct-modal" class="modal-overlay hidden">
+  <div class="modal">
+    <button class="close-btn" onclick="closeModal('acct-modal')">×</button>
+    <h3>Account Details</h3>
+    <div id="acct-modal-body"></div>
+  </div>
+</div>
+
+<div id="status-modal" class="modal-overlay hidden">
+  <div class="modal" style="min-width:340px">
+    <button class="close-btn" onclick="closeModal('status-modal')">×</button>
+    <h3>Update Account Status</h3>
+    <div class="form-group" style="margin-bottom:16px">
+      <label>Account ID</label>
+      <input id="status-acct-id" type="number" placeholder="Account ID" />
+    </div>
+    <div class="form-group" style="margin-bottom:16px">
+      <label>New Status</label>
+      <select id="status-new">
+        <option value="ACTIVE">ACTIVE</option>
+        <option value="FROZEN">FROZEN</option>
+        <option value="CLOSED">CLOSED</option>
+      </select>
+    </div>
+    <button class="btn btn-primary" onclick="submitStatusUpdate()">Update Status</button>
+  </div>
+</div>
+
+<div class="app">
+  <aside class="sidebar">
+    <div class="logo">
+      <h1>🏦 Back Office</h1>
+      <p>Operations Console</p>
+      <a href="/">← Portal Home</a>
+    </div>
+    <nav class="nav">
+      <div class="nav-item active" onclick="navigate('dashboard')" id="nav-dashboard"><span class="icon">📊</span> Dashboard</div>
+      <div class="nav-item" onclick="navigate('accounts')" id="nav-accounts"><span class="icon">🏦</span> Accounts</div>
+      <div class="nav-item" onclick="navigate('transactions')" id="nav-transactions"><span class="icon">↔️</span> Transactions</div>
+      <div class="nav-item" onclick="navigate('lookup')" id="nav-lookup"><span class="icon">🔍</span> Lookup</div>
+    </nav>
+  </aside>
+
+  <main class="main">
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-header">
+        <div><h2>Dashboard</h2><p>Live summary</p></div>
+        <button class="refresh-btn" onclick="loadDashboard()">⟳ Refresh</button>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card blue"><div class="stat-label">Total Accounts</div><div class="stat-value" id="stat-total-accts">—</div><div class="stat-sub" id="stat-active-accts">Loading...</div></div>
+        <div class="stat-card green"><div class="stat-label">Total Transactions</div><div class="stat-value" id="stat-total-txns">—</div><div class="stat-sub" id="stat-completed-txns">Loading...</div></div>
+        <div class="stat-card yellow"><div class="stat-label">Total Volume</div><div class="stat-value" id="stat-volume">—</div><div class="stat-sub">completed transactions</div></div>
+        <div class="stat-card red"><div class="stat-label">Pending / Failed</div><div class="stat-value" id="stat-pending">—</div><div class="stat-sub">need attention</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="section">
+          <div class="section-header"><h3>Recent Accounts</h3><button class="btn btn-sm btn-secondary" onclick="navigate('accounts')">View All</button></div>
+          <div class="table-wrap"><table><thead><tr><th>Holder</th><th>Balance</th><th>Status</th></tr></thead><tbody id="dash-recent-accts"></tbody></table></div>
+        </div>
+        <div class="section">
+          <div class="section-header"><h3>Recent Transactions</h3><button class="btn btn-sm btn-secondary" onclick="navigate('transactions')">View All</button></div>
+          <div class="table-wrap"><table><thead><tr><th>Ref ID</th><th>Amount</th><th>Status</th></tr></thead><tbody id="dash-recent-txns"></tbody></table></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACCOUNTS -->
+    <div class="page" id="page-accounts">
+      <div class="page-header">
+        <div><h2>Accounts</h2><p>All ledger accounts</p></div>
+        <div style="display:flex;gap:8px">
+          <button class="refresh-btn" onclick="loadAccounts()">⟳ Refresh</button>
+          <button class="btn btn-primary btn-sm" onclick="openModal('status-modal')">Update Status</button>
+        </div>
+      </div>
+      <div class="section" style="margin-bottom:20px">
+        <div class="section-header"><h3>➕ Create Account</h3></div>
+        <div class="section-body">
+          <div class="form-grid">
+            <div class="form-group"><label>Holder Name *</label><input id="ca-name" type="text" placeholder="Full name" /></div>
+            <div class="form-group"><label>Currency *</label><select id="ca-currency"><option value="INR">INR</option><option value="USD">USD</option><option value="EUR">EUR</option></select></div>
+            <div class="form-group"><label>Initial Balance (paise/cents)</label><input id="ca-balance" type="number" placeholder="e.g. 100000 = ₹1000" min="0" /></div>
+            <div class="form-group" style="align-self:end"><button class="btn btn-primary" onclick="createAccount()">Create Account</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-header"><h3>All Accounts</h3><span id="acct-count" class="badge badge-blue">0</span></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>ID</th><th>Account Number</th><th>Holder</th><th>Currency</th><th>Balance</th><th>Status</th><th>Created</th><th>Actions</th></tr></thead>
+            <tbody id="acct-table-body"><tr><td colspan="8" class="empty"><span class="spinner"></span>Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRANSACTIONS -->
+    <div class="page" id="page-transactions">
+      <div class="page-header">
+        <div><h2>Transactions</h2><p>Full history</p></div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input id="txn-filter" type="text" placeholder="Filter..." style="width:220px;padding:7px 12px;font-size:12px" oninput="filterTransactions()" />
+          <button class="refresh-btn" onclick="loadTransactions()">⟳ Refresh</button>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-header"><h3>All Transactions</h3><span id="txn-count" class="badge badge-blue">0</span></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Ref ID</th><th>From</th><th>To</th><th>Amount</th><th>Type</th><th>Status</th><th>Date</th><th>Description</th></tr></thead>
+            <tbody id="txn-table-body"><tr><td colspan="8" class="empty"><span class="spinner"></span>Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOOKUP -->
+    <div class="page" id="page-lookup">
+      <div class="page-header"><div><h2>Lookup</h2><p>Find by ID</p></div></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+        <div class="section">
+          <div class="section-header"><h3>🏦 Account Lookup</h3></div>
+          <div class="section-body">
+            <div style="display:flex;gap:8px;margin-bottom:8px">
+              <select id="lu-acct-type" style="width:140px"><option value="id">By ID</option><option value="number">By Account #</option></select>
+              <input id="lu-acct-val" type="text" placeholder="Enter value..." style="flex:1" />
+              <button class="btn btn-primary" onclick="lookupAccount()">Search</button>
+            </div>
+            <div id="lu-acct-result"></div>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-header"><h3>↔️ Transaction Lookup</h3></div>
+          <div class="section-body">
+            <div style="display:flex;gap:8px;margin-bottom:8px">
+              <input id="lu-txn-val" type="text" placeholder="Reference ID..." style="flex:1" />
+              <button class="btn btn-primary" onclick="lookupTransaction()">Search</button>
+            </div>
+            <div id="lu-txn-result"></div>
+          </div>
+        </div>
+      </div>
+      <div class="section" id="lu-txn-history-section" style="display:none">
+        <div class="section-header">
+          <h3 id="lu-txn-history-title">Transaction History</h3>
+          <button class="btn btn-sm btn-secondary" onclick="document.getElementById('lu-txn-history-section').style.display='none'">Hide</button>
+        </div>
+        <div class="table-wrap">
+          <table><thead><tr><th>Ref ID</th><th>From</th><th>To</th><th>Amount</th><th>Type</th><th>Status</th><th>Date</th></tr></thead><tbody id="lu-txn-history-body"></tbody></table>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+  const BASE = 'http://localhost:8080/api/v1';
+  let allTransactions = [], allAccounts = [];
+
+  function navigate(page) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('page-' + page).classList.add('active');
+    document.getElementById('nav-' + page).classList.add('active');
+    if (page === 'dashboard') loadDashboard();
+    if (page === 'accounts') loadAccounts();
+    if (page === 'transactions') loadTransactions();
+  }
+
+  async function api(method, path, body) {
+    const opts = { method, headers: { 'Content-Type': 'application/json' } };
+    if (body) opts.body = JSON.stringify(body);
+    const res = await fetch(BASE + path, opts);
+    if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.message || res.statusText); }
+    return res.json();
+  }
+
+  function toast(msg, type = 'info') {
+    const el = document.createElement('div');
+    el.className = `toast toast-${type}`; el.textContent = msg;
+    document.getElementById('toast-container').appendChild(el);
+    setTimeout(() => el.remove(), 4000);
+  }
+
+  function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+  function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+  function statusBadge(s) {
+    const map = { ACTIVE:'badge-green', FROZEN:'badge-yellow', CLOSED:'badge-red', COMPLETED:'badge-green', PENDING:'badge-yellow', FAILED:'badge-red' };
+    return `<span class="badge ${map[s]||'badge-blue'}">${s}</span>`;
+  }
+  function fmt(dt) { if (!dt) return '—'; return new Date(dt).toLocaleString('en-IN', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' }); }
+
+  async function loadDashboard() {
+    try {
+      const [accounts, txns] = await Promise.all([api('GET','/accounts'), api('GET','/transactions')]);
+      allAccounts = accounts; allTransactions = txns;
+      document.getElementById('stat-total-accts').textContent = accounts.length;
+      const active = accounts.filter(a=>a.status==='ACTIVE').length;
+      document.getElementById('stat-active-accts').textContent = `${active} active · ${accounts.length-active} inactive`;
+      document.getElementById('stat-total-txns').textContent = txns.length;
+      const completed = txns.filter(t=>t.status==='COMPLETED').length;
+      document.getElementById('stat-completed-txns').textContent = `${completed} completed`;
+      const vol = txns.filter(t=>t.status==='COMPLETED').reduce((s,t)=>s+t.amount,0);
+      document.getElementById('stat-volume').textContent = (vol/100).toLocaleString('en-IN',{minimumFractionDigits:2});
+      document.getElementById('stat-pending').textContent = txns.filter(t=>t.status==='PENDING'||t.status==='FAILED').length;
+      const ra = [...accounts].sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt)).slice(0,5);
+      document.getElementById('dash-recent-accts').innerHTML = ra.length ? ra.map(a=>`<tr><td>${a.holderName}</td><td><strong>${a.formattedBalance}</strong></td><td>${statusBadge(a.status)}</td></tr>`).join('') : '<tr><td colspan="3" class="empty">No accounts</td></tr>';
+      const rt = [...txns].sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt)).slice(0,5);
+      document.getElementById('dash-recent-txns').innerHTML = rt.length ? rt.map(t=>`<tr><td><span class="mono">${t.referenceId?.substring(0,14)}...</span></td><td><strong>${t.formattedAmount}</strong></td><td>${statusBadge(t.status)}</td></tr>`).join('') : '<tr><td colspan="3" class="empty">No transactions</td></tr>';
+    } catch(e) { toast('Failed to load: '+e.message,'error'); }
+  }
+
+  async function loadAccounts() {
+    document.getElementById('acct-table-body').innerHTML = '<tr><td colspan="8" class="empty"><span class="spinner"></span>Loading...</td></tr>';
+    try {
+      const accounts = await api('GET','/accounts'); allAccounts = accounts;
+      document.getElementById('acct-count').textContent = accounts.length;
+      document.getElementById('acct-table-body').innerHTML = accounts.length
+        ? accounts.map(a=>`<tr>
+            <td>${a.id}</td><td><span class="mono">${a.accountNumber}</span></td>
+            <td>${a.holderName}</td><td>${a.currency}</td>
+            <td><strong>${a.formattedBalance}</strong></td><td>${statusBadge(a.status)}</td>
+            <td>${fmt(a.createdAt)}</td>
+            <td><button class="btn btn-sm btn-secondary" onclick="showAccountDetail(${a.id})">View</button></td>
+          </tr>`).join('')
+        : '<tr><td colspan="8" class="empty">No accounts</td></tr>';
+    } catch(e) { toast('Error: '+e.message,'error'); }
+  }
+
+  async function createAccount() {
+    const name=document.getElementById('ca-name').value.trim();
+    const currency=document.getElementById('ca-currency').value;
+    const balance=parseInt(document.getElementById('ca-balance').value)||0;
+    if (!name) { toast('Name required','error'); return; }
+    try {
+      const acct = await api('POST','/accounts',{holderName:name,currency,initialBalance:balance});
+      toast(`Created: ${acct.accountNumber}`,'success');
+      document.getElementById('ca-name').value=''; document.getElementById('ca-balance').value='';
+      loadAccounts();
+    } catch(e) { toast('Failed: '+e.message,'error'); }
+  }
+
+  async function showAccountDetail(id) {
+    try {
+      const [acct, txns] = await Promise.all([api('GET',`/accounts/${id}`), api('GET',`/transactions/account/${id}`)]);
+      document.getElementById('acct-modal-body').innerHTML = `
+        <div class="info-row"><span class="info-label">Account Number</span><span class="mono">${acct.accountNumber}</span></div>
+        <div class="info-row"><span class="info-label">Holder</span>${acct.holderName}</div>
+        <div class="info-row"><span class="info-label">Balance</span><strong>${acct.formattedBalance}</strong></div>
+        <div class="info-row"><span class="info-label">Status</span>${statusBadge(acct.status)}</div>
+        <div class="info-row"><span class="info-label">Currency</span>${acct.currency}</div>
+        <div class="info-row"><span class="info-label">Created</span>${fmt(acct.createdAt)}</div>
+        <hr class="divider"/>
+        <h4 style="font-size:13px;font-weight:600;margin-bottom:10px">Transaction History (${txns.length})</h4>
+        <div style="overflow-x:auto"><table style="width:100%;font-size:12px">
+          <thead><tr><th>Ref ID</th><th>From</th><th>To</th><th>Amount</th><th>Status</th></tr></thead>
+          <tbody>${txns.length ? txns.map(t=>`<tr><td><span class="mono" style="font-size:11px">${t.referenceId}</span></td><td style="font-size:11px">${t.sourceAccountNumber}</td><td style="font-size:11px">${t.destinationAccountNumber}</td><td>${t.formattedAmount}</td><td>${statusBadge(t.status)}</td></tr>`).join('') : '<tr><td colspan="5" class="empty">None</td></tr>'}</tbody>
+        </table></div>`;
+      openModal('acct-modal');
+    } catch(e) { toast('Error: '+e.message,'error'); }
+  }
+
+  async function submitStatusUpdate() {
+    const id=parseInt(document.getElementById('status-acct-id').value);
+    const status=document.getElementById('status-new').value;
+    if (!id) { toast('Enter account ID','error'); return; }
+    try {
+      const acct = await api('PATCH',`/accounts/${id}/status?status=${status}`);
+      toast(`${acct.accountNumber} → ${status}`,'success');
+      closeModal('status-modal'); loadAccounts();
+    } catch(e) { toast('Failed: '+e.message,'error'); }
+  }
+
+  async function loadTransactions() {
+    document.getElementById('txn-table-body').innerHTML='<tr><td colspan="8" class="empty"><span class="spinner"></span>Loading...</td></tr>';
+    try {
+      const txns=await api('GET','/transactions'); allTransactions=txns;
+      document.getElementById('txn-count').textContent=txns.length;
+      renderTransactions(txns);
+    } catch(e) { toast('Error: '+e.message,'error'); }
+  }
+
+  function renderTransactions(txns) {
+    document.getElementById('txn-table-body').innerHTML = txns.length
+      ? [...txns].sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt)).map(t=>`<tr>
+          <td><span class="mono">${t.referenceId}</span></td>
+          <td><span class="acct-chip">${t.sourceAccountNumber}</span></td>
+          <td><span class="acct-chip">${t.destinationAccountNumber}</span></td>
+          <td><strong>${t.formattedAmount}</strong></td>
+          <td><span class="badge badge-blue">${t.type}</span></td>
+          <td>${statusBadge(t.status)}</td>
+          <td>${fmt(t.createdAt)}</td>
+          <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.description||'—'}</td>
+        </tr>`).join('')
+      : '<tr><td colspan="8" class="empty">No transactions</td></tr>';
+  }
+
+  function filterTransactions() {
+    const q=document.getElementById('txn-filter').value.toLowerCase();
+    const f=allTransactions.filter(t=>
+      (t.referenceId||'').toLowerCase().includes(q)||(t.status||'').toLowerCase().includes(q)||
+      (t.sourceAccountNumber||'').toLowerCase().includes(q)||(t.destinationAccountNumber||'').toLowerCase().includes(q)||
+      (t.description||'').toLowerCase().includes(q));
+    document.getElementById('txn-count').textContent=f.length+'/'+allTransactions.length;
+    renderTransactions(f);
+  }
+
+  async function lookupAccount() {
+    const type=document.getElementById('lu-acct-type').value;
+    const val=document.getElementById('lu-acct-val').value.trim();
+    const el=document.getElementById('lu-acct-result');
+    if (!val) return;
+    el.innerHTML='<span class="spinner"></span>';
+    try {
+      const path=type==='id'?`/accounts/${val}`:`/accounts/number/${val}`;
+      const acct=await api('GET',path);
+      el.innerHTML=`<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px;margin-top:10px">
+        <div class="info-row"><span class="info-label">Account #</span><span class="mono">${acct.accountNumber}</span></div>
+        <div class="info-row"><span class="info-label">Holder</span>${acct.holderName}</div>
+        <div class="info-row"><span class="info-label">Balance</span><strong>${acct.formattedBalance}</strong></div>
+        <div class="info-row"><span class="info-label">Status</span>${statusBadge(acct.status)}</div>
+        <div style="margin-top:10px"><button class="btn btn-sm btn-secondary" onclick="loadAccountHistory(${acct.id},'${acct.accountNumber}')">View Transactions</button></div>
+      </div>`;
+    } catch(e) { el.innerHTML=`<div style="color:#ef4444;margin-top:8px;font-size:13px">Not found: ${e.message}</div>`; }
+  }
+
+  async function lookupTransaction() {
+    const val=document.getElementById('lu-txn-val').value.trim();
+    const el=document.getElementById('lu-txn-result');
+    if (!val) return;
+    el.innerHTML='<span class="spinner"></span>';
+    try {
+      const txn=await api('GET',`/transactions/${val}`);
+      el.innerHTML=`<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px;margin-top:10px">
+        <div class="info-row"><span class="info-label">Ref ID</span><span class="mono">${txn.referenceId}</span></div>
+        <div class="info-row"><span class="info-label">Amount</span><strong>${txn.formattedAmount}</strong></div>
+        <div class="info-row"><span class="info-label">Status</span>${statusBadge(txn.status)}</div>
+        <div class="info-row"><span class="info-label">From</span><span class="mono">${txn.sourceAccountNumber}</span></div>
+        <div class="info-row"><span class="info-label">To</span><span class="mono">${txn.destinationAccountNumber}</span></div>
+        <div class="info-row"><span class="info-label">Date</span>${fmt(txn.createdAt)}</div>
+      </div>`;
+    } catch(e) { el.innerHTML=`<div style="color:#ef4444;margin-top:8px;font-size:13px">Not found: ${e.message}</div>`; }
+  }
+
+  async function loadAccountHistory(id, accountNumber) {
+    const section=document.getElementById('lu-txn-history-section');
+    section.style.display='block';
+    document.getElementById('lu-txn-history-title').textContent=`History — ${accountNumber}`;
+    const body=document.getElementById('lu-txn-history-body');
+    body.innerHTML='<tr><td colspan="7" class="empty"><span class="spinner"></span>Loading...</td></tr>';
+    try {
+      const txns=await api('GET',`/transactions/account/${id}`);
+      body.innerHTML=txns.length?txns.map(t=>`<tr>
+        <td><span class="mono" style="font-size:11px">${t.referenceId}</span></td>
+        <td style="font-size:11px">${t.sourceAccountNumber}</td>
+        <td style="font-size:11px">${t.destinationAccountNumber}</td>
+        <td>${t.formattedAmount}</td><td>${t.type}</td><td>${statusBadge(t.status)}</td><td>${fmt(t.createdAt)}</td>
+      </tr>`).join(''):'<tr><td colspan="7" class="empty">No transactions</td></tr>';
+    } catch(e) { body.innerHTML=`<tr><td colspan="7" class="empty" style="color:#ef4444">Error: ${e.message}</td></tr>`; }
+  }
+
+  loadDashboard();
+</script>
+</body>
+</html>

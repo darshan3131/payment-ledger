@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PayLedger — Select Portal</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0f1117; --surface: #1a1d27; --border: #2e3248;
+      --accent: #6366f1; --text: #e2e8f0; --muted: #64748b;
+    }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; padding: 24px;
+    }
+    .logo { text-align: center; margin-bottom: 48px; }
+    .logo h1 { font-size: 32px; font-weight: 800; letter-spacing: -0.5px; }
+    .logo h1 span { color: #6366f1; }
+    .logo p { color: var(--muted); margin-top: 8px; font-size: 15px; }
+
+    .portals { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; max-width: 780px; width: 100%; }
+
+    .portal-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; padding: 32px 24px; text-align: center;
+      cursor: pointer; text-decoration: none; color: var(--text);
+      transition: all 0.2s; position: relative; overflow: hidden;
+    }
+    .portal-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+      transition: opacity 0.2s; opacity: 0.7;
+    }
+    .portal-card:hover { transform: translateY(-4px); border-color: #4a4f7a; }
+    .portal-card:hover::before { opacity: 1; }
+
+    .portal-card.customer::before { background: linear-gradient(90deg, #6366f1, #818cf8); }
+    .portal-card.backoffice::before { background: linear-gradient(90deg, #22c55e, #4ade80); }
+    .portal-card.admin::before { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+
+    .portal-card:hover.customer { box-shadow: 0 8px 32px rgba(99,102,241,0.2); }
+    .portal-card:hover.backoffice { box-shadow: 0 8px 32px rgba(34,197,94,0.2); }
+    .portal-card:hover.admin { box-shadow: 0 8px 32px rgba(245,158,11,0.2); }
+
+    .portal-icon { font-size: 40px; margin-bottom: 16px; }
+    .portal-name { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+    .portal-desc { font-size: 13px; color: var(--muted); line-height: 1.6; }
+    .portal-tag {
+      display: inline-block; margin-top: 16px; padding: 4px 12px;
+      border-radius: 99px; font-size: 11px; font-weight: 600; border: 1px solid;
+    }
+    .customer .portal-tag { color: #818cf8; border-color: rgba(99,102,241,0.4); background: rgba(99,102,241,0.1); }
+    .backoffice .portal-tag { color: #4ade80; border-color: rgba(34,197,94,0.4); background: rgba(34,197,94,0.1); }
+    .admin .portal-tag { color: #fbbf24; border-color: rgba(245,158,11,0.4); background: rgba(245,158,11,0.1); }
+
+    .footer { margin-top: 48px; font-size: 12px; color: var(--muted); }
+
+    @media (max-width: 640px) {
+      .portals { grid-template-columns: 1fr; max-width: 360px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="logo">
+    <h1>💳 Pay<span>Ledger</span></h1>
+    <p>Select a portal to continue</p>
+  </div>
+
+  <div class="portals">
+    <a class="portal-card customer" href="/customer/index.html">
+      <div class="portal-icon">👤</div>
+      <div class="portal-name">Customer Portal</div>
+      <div class="portal-desc">View your balance, transaction history, and send transfers to other accounts.</div>
+      <div class="portal-tag">Account Holder</div>
+    </a>
+
+    <a class="portal-card backoffice" href="/backoffice/index.html">
+      <div class="portal-icon">🏦</div>
+      <div class="portal-name">Back Office</div>
+      <div class="portal-desc">Manage all accounts and transactions. Lookup, status updates, and full history.</div>
+      <div class="portal-tag">Operations Team</div>
+    </a>
+
+    <a class="portal-card admin" href="/admin/index.html">
+      <div class="portal-icon">⚙️</div>
+      <div class="portal-name">Admin Console</div>
+      <div class="portal-desc">System analytics, account creation, outbox health, and reconciliation oversight.</div>
+      <div class="portal-tag">System Admin</div>
+    </a>
+  </div>
+
+  <div class="footer">PayLedger v1.0 · Spring Boot 4 · Running on port 8080</div>
+</body>
+</html>

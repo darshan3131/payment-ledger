@@ -1,0 +1,88 @@
+services:
+  # Spring Boot backend
+  - type: web
+    name: payment-ledger-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    envVars:
+      - key: SPRING_DATASOURCE_URL
+        fromDatabase:
+          name: payment-ledger-db
+          property: connectionString
+      - key: SPRING_DATASOURCE_USERNAME
+        fromDatabase:
+          name: payment-ledger-db
+          property: user
+      - key: SPRING_DATASOURCE_PASSWORD
+        fromDatabase:
+          name: payment-ledger-db
+          property: password
+      - key: SPRING_REDIS_HOST
+        fromService:
+          name: payment-ledger-redis
+          type: redis
+          property: host
+      - key: SPRING_REDIS_PORT
+        fromService:
+          name: payment-ledger-redis
+          type: redis
+          property: port
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRATION
+        value: "86400000"
+      - key: SPRING_KAFKA_BOOTSTRAP_SERVERS
+        value: "localhost:9092"
+
+  # Customer frontend
+  - type: web
+    name: payment-ledger-customer
+    runtime: static
+    buildCommand: cd frontend/customer && npm install && npm run build
+    staticPublishPath: frontend/customer/dist
+    plan: free
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          name: payment-ledger-api
+          type: web
+          property: url
+
+  # Backoffice frontend
+  - type: web
+    name: payment-ledger-backoffice
+    runtime: static
+    buildCommand: cd frontend/backoffice && npm install && npm run build
+    staticPublishPath: frontend/backoffice/dist
+    plan: free
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          name: payment-ledger-api
+          type: web
+          property: url
+
+  # Admin frontend
+  - type: web
+    name: payment-ledger-admin
+    runtime: static
+    buildCommand: cd frontend/admin && npm install && npm run build
+    staticPublishPath: frontend/admin/dist
+    plan: free
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          name: payment-ledger-api
+          type: web
+          property: url
+
+databases:
+  - name: payment-ledger-db
+    databaseName: paymentledger
+    user: paymentledger
+    plan: free
+
+  - name: payment-ledger-redis
+    type: redis
+    plan: free

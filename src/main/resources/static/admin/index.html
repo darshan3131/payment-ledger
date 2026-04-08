@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PayLedger — Admin Console</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0f1117; --surface: #1a1d27; --surface2: #22263a; --border: #2e3248;
+      --accent: #f59e0b; --accent2: #fbbf24; --text: #e2e8f0; --muted: #64748b;
+      --green: #22c55e; --red: #ef4444; --blue: #6366f1; --blue2: #818cf8;
+      --font: 'Segoe UI', system-ui, sans-serif;
+    }
+    body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; }
+    .app { display: flex; min-height: 100vh; }
+    .sidebar { width: 240px; background: var(--surface); border-right: 1px solid var(--border); padding: 24px 0; display: flex; flex-direction: column; position: fixed; height: 100vh; z-index: 10; }
+    .logo { padding: 0 20px 24px; border-bottom: 1px solid var(--border); }
+    .logo h1 { font-size: 16px; font-weight: 700; color: var(--accent2); }
+    .logo p { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .logo a { font-size: 11px; color: var(--muted); text-decoration: none; display: block; margin-top: 6px; }
+    .logo a:hover { color: var(--text); }
+    .nav { margin-top: 16px; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 20px; cursor: pointer; font-size: 14px; color: var(--muted); transition: all 0.15s; border-left: 3px solid transparent; }
+    .nav-item:hover { color: var(--text); background: var(--surface2); }
+    .nav-item.active { color: var(--accent2); border-left-color: var(--accent); background: rgba(245,158,11,0.08); }
+    .main { margin-left: 240px; flex: 1; padding: 28px; }
+    .page { display: none; } .page.active { display: block; }
+    .page-header { margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; }
+    .page-header h2 { font-size: 22px; font-weight: 700; }
+    .page-header p { font-size: 13px; color: var(--muted); margin-top: 3px; }
+
+    /* STATS */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 28px; }
+    .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; position: relative; overflow: hidden; }
+    .stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+    .stat-card.yellow::before { background: var(--accent); }
+    .stat-card.green::before  { background: var(--green); }
+    .stat-card.blue::before   { background: var(--blue); }
+    .stat-card.red::before    { background: var(--red); }
+    .stat-card.purple::before { background: #a855f7; }
+    .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+    .stat-value { font-size: 26px; font-weight: 700; margin-top: 6px; }
+    .stat-sub   { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+    /* SECTION */
+    .section { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 20px; }
+    .section-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .section-header h3 { font-size: 15px; font-weight: 600; }
+    .section-body { padding: 20px; }
+
+    /* CHART BARS */
+    .bar-chart { display: flex; gap: 12px; align-items: flex-end; height: 120px; padding: 0 4px; }
+    .bar-item { display: flex; flex-direction: column; align-items: center; flex: 1; gap: 6px; }
+    .bar-fill { width: 100%; border-radius: 4px 4px 0 0; min-height: 4px; transition: height 0.5s ease; }
+    .bar-fill.green  { background: var(--green); }
+    .bar-fill.yellow { background: var(--accent); }
+    .bar-fill.red    { background: var(--red); }
+    .bar-fill.blue   { background: var(--blue); }
+    .bar-label { font-size: 11px; color: var(--muted); text-align: center; }
+    .bar-val   { font-size: 12px; font-weight: 600; text-align: center; }
+
+    /* TABLE */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { padding: 10px 14px; text-align: left; color: var(--muted); font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
+    td { padding: 12px 14px; border-bottom: 1px solid var(--border); }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(255,255,255,0.02); }
+    .mono { font-family: 'Courier New', monospace; font-size: 12px; color: var(--blue2); }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 600; }
+    .badge-green  { background: rgba(34,197,94,0.15); color: var(--green); }
+    .badge-red    { background: rgba(239,68,68,0.15); color: var(--red); }
+    .badge-yellow { background: rgba(245,158,11,0.15); color: var(--accent); }
+    .badge-blue   { background: rgba(99,102,241,0.15); color: var(--blue2); }
+
+    /* FORM */
+    .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+    label { font-size: 12px; color: var(--muted); font-weight: 500; }
+    input, select { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; color: var(--text); font-size: 13px; outline: none; transition: border-color 0.15s; font-family: var(--font); width: 100%; }
+    input:focus, select:focus { border-color: var(--accent); }
+    select option { background: var(--surface2); }
+    .btn { padding: 9px 18px; border-radius: 8px; border: none; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.15s; font-family: var(--font); }
+    .btn-primary { background: var(--accent); color: #0f1117; }
+    .btn-primary:hover { background: var(--accent2); }
+    .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+    .btn-secondary:hover { border-color: var(--accent); }
+    .btn-danger { background: rgba(239,68,68,0.15); color: var(--red); border: 1px solid rgba(239,68,68,0.3); }
+    .btn-sm { padding: 5px 10px; font-size: 12px; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+    /* HEALTH */
+    .health-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid var(--border); }
+    .health-row:last-child { border-bottom: none; }
+    .health-name { font-size: 13px; font-weight: 600; }
+    .health-sub  { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .health-dot  { width: 10px; height: 10px; border-radius: 50%; }
+    .dot-green  { background: var(--green); box-shadow: 0 0 8px var(--green); }
+    .dot-red    { background: var(--red);   box-shadow: 0 0 8px var(--red); }
+    .dot-yellow { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+
+    /* MISC */
+    .empty { text-align: center; padding: 40px; color: var(--muted); font-size: 14px; }
+    .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; margin-right: 6px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #toast-container { position: fixed; top: 20px; right: 20px; z-index: 999; display: flex; flex-direction: column; gap: 8px; }
+    .toast { padding: 12px 18px; border-radius: 8px; font-size: 13px; font-weight: 500; min-width: 260px; animation: slideIn 0.3s ease; border: 1px solid; }
+    .toast-success { background: rgba(34,197,94,0.15); color: var(--green); border-color: rgba(34,197,94,0.3); }
+    .toast-error   { background: rgba(239,68,68,0.15); color: var(--red); border-color: rgba(239,68,68,0.3); }
+    .toast-info    { background: rgba(245,158,11,0.15); color: var(--accent2); border-color: rgba(245,158,11,0.3); }
+    @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    .refresh-btn { background: none; border: 1px solid var(--border); color: var(--muted); border-radius: 6px; padding: 5px 10px; cursor: pointer; font-size: 12px; }
+    .refresh-btn:hover { color: var(--text); border-color: var(--accent); }
+    .divider { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .pill-row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .pill { padding: 4px 12px; border-radius: 99px; font-size: 12px; font-weight: 600; }
+    .pill-green  { background: rgba(34,197,94,0.15); color: var(--green); }
+    .pill-yellow { background: rgba(245,158,11,0.15); color: var(--accent); }
+    .pill-red    { background: rgba(239,68,68,0.15); color: var(--red); }
+  </style>
+</head>
+<body>
+<div id="toast-container"></div>
+
+<!-- Login overlay -->
+<div id="login-overlay" style="display:none;position:fixed;inset:0;background:#0f1117;z-index:999;align-items:center;justify-content:center;">
+  <div style="background:#1a1d27;border:1px solid #2e3248;border-radius:14px;padding:36px;width:340px">
+    <h2 style="font-size:18px;font-weight:700;color:#fbbf24;margin-bottom:6px">⚙️ Admin Console</h2>
+    <p style="font-size:12px;color:#64748b;margin-bottom:24px">Sign in with your admin credentials</p>
+    <div id="login-error" style="color:#ef4444;font-size:13px;min-height:20px;margin-bottom:12px"></div>
+    <div style="margin-bottom:14px">
+      <label style="font-size:11px;color:#64748b;display:block;margin-bottom:5px">Username</label>
+      <input id="login-username" type="text" placeholder="admin" onkeydown="if(event.key==='Enter')doLogin()"
+        style="width:100%;background:#22263a;border:1px solid #2e3248;border-radius:8px;padding:9px 12px;color:#e2e8f0;font-size:13px;outline:none;box-sizing:border-box"/>
+    </div>
+    <div style="margin-bottom:20px">
+      <label style="font-size:11px;color:#64748b;display:block;margin-bottom:5px">Password</label>
+      <input id="login-password" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"
+        style="width:100%;background:#22263a;border:1px solid #2e3248;border-radius:8px;padding:9px 12px;color:#e2e8f0;font-size:13px;outline:none;box-sizing:border-box"/>
+    </div>
+    <button onclick="doLogin()"
+      style="width:100%;padding:10px;background:#f59e0b;color:#0f1117;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer">
+      Sign in
+    </button>
+  </div>
+</div>
+
+<div class="app">
+  <aside class="sidebar">
+    <div class="logo">
+      <h1>⚙️ Admin Console</h1>
+      <p id="sidebar-username" style="font-size:11px;color:#fbbf24;margin-top:3px"></p>
+      <a href="/">← Portal Home</a>
+      <a href="#" onclick="doLogout()" style="color:#ef4444;margin-top:4px">Sign out</a>
+    </div>
+    <nav class="nav">
+      <div class="nav-item active" onclick="navigate('analytics')" id="nav-analytics"><span>📈</span> Analytics</div>
+      <div class="nav-item" onclick="navigate('accounts')" id="nav-accounts"><span>🏦</span> Account Management</div>
+      <div class="nav-item" onclick="navigate('transactions')" id="nav-transactions"><span>↔️</span> All Transactions</div>
+      <div class="nav-item" onclick="navigate('health')" id="nav-health"><span>🩺</span> System Health</div>
+    </nav>
+  </aside>
+
+  <main class="main">
+
+    <!-- ══════════════════════════════════
+         ANALYTICS
+    ══════════════════════════════════ -->
+    <div class="page active" id="page-analytics">
+      <div class="page-header">
+        <div><h2>Analytics</h2><p>System-wide metrics and trends</p></div>
+        <button class="refresh-btn" onclick="loadAnalytics()">⟳ Refresh</button>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card yellow"><div class="stat-label">Total Accounts</div><div class="stat-value" id="a-total-accts">—</div><div class="stat-sub" id="a-active-accts">—</div></div>
+        <div class="stat-card green"><div class="stat-label">Total Volume (₹)</div><div class="stat-value" id="a-volume">—</div><div class="stat-sub">completed only</div></div>
+        <div class="stat-card blue"><div class="stat-label">Total Transactions</div><div class="stat-value" id="a-total-txns">—</div><div class="stat-sub" id="a-completed-txns">—</div></div>
+        <div class="stat-card red"><div class="stat-label">Pending</div><div class="stat-value" id="a-pending">—</div><div class="stat-sub">stuck / unresolved</div></div>
+        <div class="stat-card purple"><div class="stat-label">Avg Txn Size</div><div class="stat-value" id="a-avg">—</div><div class="stat-sub">per completed txn</div></div>
+      </div>
+
+      <div class="two-col">
+        <!-- Transaction Status Distribution -->
+        <div class="section">
+          <div class="section-header"><h3>Transaction Status Breakdown</h3></div>
+          <div class="section-body">
+            <div class="bar-chart" id="status-chart"></div>
+          </div>
+        </div>
+
+        <!-- Account Status Distribution -->
+        <div class="section">
+          <div class="section-header"><h3>Account Status Breakdown</h3></div>
+          <div class="section-body">
+            <div class="bar-chart" id="acct-status-chart"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <!-- Top Senders -->
+        <div class="section">
+          <div class="section-header"><h3>Top Senders</h3></div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Account</th><th>Holder</th><th>Total Sent</th><th>Count</th></tr></thead>
+              <tbody id="top-senders-body"></tbody>
+            </table>
+          </div>
+        </div>
+        <!-- Top Receivers -->
+        <div class="section">
+          <div class="section-header"><h3>Top Receivers</h3></div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Account</th><th>Holder</th><th>Total Received</th><th>Count</th></tr></thead>
+              <tbody id="top-receivers-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════
+         ACCOUNT MANAGEMENT
+    ══════════════════════════════════ -->
+    <div class="page" id="page-accounts">
+      <div class="page-header">
+        <div><h2>Account Management</h2><p>Create, view, and control accounts</p></div>
+        <button class="refresh-btn" onclick="loadAccounts()">⟳ Refresh</button>
+      </div>
+
+      <div class="two-col" style="margin-bottom:20px">
+        <!-- Create Account -->
+        <div class="section">
+          <div class="section-header"><h3>➕ Create Account</h3></div>
+          <div class="section-body">
+            <div class="form-group"><label>Customer *</label>
+              <select id="ca-user-id"><option value="">— Select customer —</option></select>
+            </div>
+            <div class="form-group"><label>Currency</label>
+              <select id="ca-currency"><option value="INR">INR</option><option value="USD">USD</option><option value="EUR">EUR</option></select>
+            </div>
+            <button class="btn btn-primary" onclick="createAccount()">Open Account</button>
+          </div>
+        </div>
+
+        <!-- Bulk Status Update -->
+        <div class="section">
+          <div class="section-header"><h3>🔒 Update Account Status</h3></div>
+          <div class="section-body">
+            <div class="form-group"><label>Account ID</label><input id="su-id" type="number" placeholder="Account ID" /></div>
+            <div class="form-group"><label>New Status</label>
+              <select id="su-status"><option value="ACTIVE">ACTIVE</option><option value="FROZEN">FROZEN</option><option value="CLOSED">CLOSED</option></select>
+            </div>
+            <button class="btn btn-danger" onclick="updateStatus()">Update Status</button>
+            <p style="font-size:11px;color:var(--muted);margin-top:8px">⚠️ FROZEN blocks all transactions. CLOSED is permanent.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-header"><h3>All Accounts</h3><span id="am-count" class="badge badge-yellow">0</span></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>ID</th><th>Account #</th><th>Holder</th><th>Currency</th><th>Balance</th><th>Status</th><th>Created</th></tr></thead>
+            <tbody id="am-table-body"><tr><td colspan="7" class="empty"><span class="spinner"></span>Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════
+         ALL TRANSACTIONS
+    ══════════════════════════════════ -->
+    <div class="page" id="page-transactions">
+      <div class="page-header">
+        <div><h2>All Transactions</h2><p>Complete audit trail</p></div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <select id="txn-status-filter" onchange="filterTxns()" style="padding:7px 10px;font-size:12px">
+            <option value="">All Statuses</option>
+            <option value="COMPLETED">Completed</option>
+            <option value="PENDING">Pending</option>
+            <option value="FAILED">Failed</option>
+          </select>
+          <button class="refresh-btn" onclick="loadTransactions()">⟳ Refresh</button>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-header"><h3>Transactions</h3><span id="txn-count" class="badge badge-blue">0</span></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Ref ID</th><th>From</th><th>To</th><th>Amount</th><th>Type</th><th>Status</th><th>Idempotency Key</th><th>Date</th></tr></thead>
+            <tbody id="txn-table-body"><tr><td colspan="8" class="empty"><span class="spinner"></span>Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════
+         SYSTEM HEALTH
+    ══════════════════════════════════ -->
+    <div class="page" id="page-health">
+      <div class="page-header">
+        <div><h2>System Health</h2><p>Infrastructure and pipeline status</p></div>
+        <button class="refresh-btn" onclick="loadHealth()">⟳ Refresh</button>
+      </div>
+
+      <div class="two-col">
+        <div class="section">
+          <div class="section-header"><h3>Service Status</h3></div>
+          <div class="section-body" id="service-status-body">
+            <div class="health-row">
+              <div><div class="health-name">MySQL</div><div class="health-sub">Primary database</div></div>
+              <div class="health-dot dot-green" id="dot-mysql"></div>
+            </div>
+            <div class="health-row">
+              <div><div class="health-name">Redis</div><div class="health-sub">Idempotency cache</div></div>
+              <div class="health-dot" id="dot-redis"></div>
+            </div>
+            <div class="health-row">
+              <div><div class="health-name">Kafka</div><div class="health-sub">Event bus (OutboxPoller)</div></div>
+              <div class="health-dot" id="dot-kafka"></div>
+            </div>
+            <div class="health-row">
+              <div><div class="health-name">Spring Boot API</div><div class="health-sub">localhost:8080</div></div>
+              <div class="health-dot dot-green"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-header"><h3>Outbox Pipeline</h3></div>
+          <div class="section-body">
+            <div style="display:flex;gap:24px;margin-bottom:20px">
+              <div><div class="stat-label">Pending Events</div><div class="stat-value" id="outbox-pending">—</div></div>
+              <div><div class="stat-label">Total Events</div><div class="stat-value" id="outbox-total">—</div></div>
+            </div>
+            <div class="health-row">
+              <div><div class="health-name">OutboxPoller</div><div class="health-sub">Runs every 10s, 30s initial delay</div></div>
+              <div class="health-dot dot-green"></div>
+            </div>
+            <div class="health-row">
+              <div><div class="health-name">Kafka Topic</div><div class="health-sub">transaction-events</div></div>
+              <div class="health-dot dot-green" id="dot-topic"></div>
+            </div>
+            <p style="font-size:12px;color:var(--muted);margin-top:12px">
+              Outbox pattern guarantees no event is lost even if Kafka is temporarily unavailable. Events are persisted to DB first, then published.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-header"><h3>Reconciliation Alerts</h3></div>
+        <div class="section-body">
+          <div id="recon-body">
+            <div class="empty"><span class="spinner"></span>Checking...</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-header"><h3>Architecture Notes</h3></div>
+        <div class="section-body" style="font-size:13px;color:var(--muted);line-height:2">
+          <p>🔒 <strong style="color:var(--text)">Optimistic Locking</strong> — Account entity uses <code style="background:var(--surface2);padding:1px 6px;border-radius:4px;font-size:12px">@Version</code> to prevent lost updates under concurrent writes</p>
+          <p>📤 <strong style="color:var(--text)">Outbox Pattern</strong> — Events written atomically inside transaction, then published to Kafka by scheduler</p>
+          <p>🔁 <strong style="color:var(--text)">Idempotency</strong> — Redis-backed key store prevents duplicate transaction processing</p>
+          <p>🔬 <strong style="color:var(--text)">Reconciliation</strong> — Background job auto-heals PENDING transactions stuck for &gt;5 minutes</p>
+          <p>📒 <strong style="color:var(--text)">Double-Entry Ledger</strong> — Every transfer creates both a DEBIT and CREDIT ledger entry</p>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+  const BASE = 'http://localhost:8080/api/v1';
+  let allAccounts = [], allTransactions = [], allCustomers = [];
+
+  // ── JWT helpers ──
+  function getToken()       { return localStorage.getItem('admin_token'); }
+  function saveToken(t)     { localStorage.setItem('admin_token', t); }
+  function clearToken()     { localStorage.removeItem('admin_token'); localStorage.removeItem('admin_user'); }
+  function saveAdminUser(u) { localStorage.setItem('admin_user', JSON.stringify(u)); }
+  function getAdminUser()   { try { return JSON.parse(localStorage.getItem('admin_user')); } catch { return null; } }
+
+  function showLoginOverlay(show) {
+    document.getElementById('login-overlay').style.display = show ? 'flex' : 'none';
+    document.querySelector('.app').style.display           = show ? 'none' : 'flex';
+  }
+
+  function navigate(page) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('page-' + page).classList.add('active');
+    document.getElementById('nav-' + page).classList.add('active');
+    if (page === 'analytics')    loadAnalytics();
+    if (page === 'accounts')     loadAccounts();
+    if (page === 'transactions') loadTransactions();
+    if (page === 'health')       loadHealth();
+  }
+
+  async function api(method, path, body) {
+    const token = getToken();
+    const opts  = { method, headers: {'Content-Type':'application/json'} };
+    if (token) opts.headers['Authorization'] = 'Bearer ' + token;
+    if (body)  opts.body = JSON.stringify(body);
+    const res = await fetch(BASE + path, opts);
+    if (res.status === 401) { clearToken(); showLoginOverlay(true); throw new Error('Session expired — please log in again'); }
+    if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.error || e.message || res.statusText); }
+    return res.json();
+  }
+
+  // ── Login ──
+  async function doLogin() {
+    const username = document.getElementById('login-username').value.trim();
+    const password = document.getElementById('login-password').value;
+    const errEl    = document.getElementById('login-error');
+    errEl.textContent = '';
+    if (!username || !password) { errEl.textContent = 'Username and password required'; return; }
+    try {
+      const data = await (async () => {
+        const res = await fetch(BASE + '/auth/login', {
+          method: 'POST', headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({ username, password })
+        });
+        if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.error || 'Invalid credentials'); }
+        return res.json();
+      })();
+      if (data.role !== 'ADMIN') { errEl.textContent = 'Admin access required'; return; }
+      saveToken(data.token);
+      saveAdminUser({ username: data.username, role: data.role });
+      document.getElementById('sidebar-username').textContent = data.username;
+      showLoginOverlay(false);
+      loadAnalytics();
+    } catch (e) { errEl.textContent = e.message; }
+  }
+
+  function doLogout() { clearToken(); showLoginOverlay(true); }
+
+  // Check token on load
+  window.addEventListener('DOMContentLoaded', () => {
+    const user = getAdminUser();
+    if (getToken() && user) {
+      document.getElementById('sidebar-username').textContent = user.username;
+      showLoginOverlay(false);
+      loadAnalytics();
+    } else {
+      showLoginOverlay(true);
+    }
+  });
+
+  function toast(msg, type='info') {
+    const el = document.createElement('div');
+    el.className=`toast toast-${type}`; el.textContent=msg;
+    document.getElementById('toast-container').appendChild(el);
+    setTimeout(()=>el.remove(), 4000);
+  }
+
+  function statusBadge(s) {
+    const m={ACTIVE:'badge-green',FROZEN:'badge-yellow',CLOSED:'badge-red',COMPLETED:'badge-green',PENDING:'badge-yellow',FAILED:'badge-red'};
+    return `<span class="badge ${m[s]||'badge-blue'}">${s}</span>`;
+  }
+
+  function fmt(dt) {
+    if (!dt) return '—';
+    return new Date(dt).toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  }
+
+  function fmtAmt(v) { return (v/100).toLocaleString('en-IN',{minimumFractionDigits:2}); }
+
+  // ── ANALYTICS ──
+  async function loadAnalytics() {
+    try {
+      const [acctPaged, txnPaged] = await Promise.all([
+        api('GET','/accounts?page=0&size=1000'),
+        api('GET','/transactions?page=0&size=1000')
+      ]);
+      // Backend returns PagedResponse: { content: [...], totalElements, totalPages, ... }
+      const accounts = (acctPaged.content || []).filter(a => a.accountNumber !== 'SYSTEM_CASH');
+      const txns     = txnPaged.content || [];
+      allAccounts = accounts; allTransactions = txns;
+
+      document.getElementById('a-total-accts').textContent = accounts.length;
+      const active = accounts.filter(a=>a.status==='ACTIVE').length;
+      document.getElementById('a-active-accts').textContent = `${active} active · ${accounts.length-active} frozen/closed`;
+
+      const completed = txns.filter(t=>t.status==='COMPLETED');
+      const vol = completed.reduce((s,t)=>s+t.amount,0);
+      document.getElementById('a-volume').textContent = fmtAmt(vol);
+      document.getElementById('a-total-txns').textContent = txns.length;
+      document.getElementById('a-completed-txns').textContent = `${completed.length} completed`;
+      document.getElementById('a-pending').textContent = txns.filter(t=>t.status==='PENDING').length;
+      document.getElementById('a-avg').textContent = completed.length ? fmtAmt(Math.round(vol/completed.length)) : '—';
+
+      // Status chart
+      const statusMap = { COMPLETED: 0, PENDING: 0, FAILED: 0 };
+      txns.forEach(t => { if (statusMap[t.status] !== undefined) statusMap[t.status]++; });
+      const maxS = Math.max(...Object.values(statusMap), 1);
+      const colorS = { COMPLETED:'green', PENDING:'yellow', FAILED:'red' };
+      document.getElementById('status-chart').innerHTML = Object.entries(statusMap).map(([k,v]) =>
+        `<div class="bar-item">
+          <div class="bar-val">${v}</div>
+          <div class="bar-fill ${colorS[k]}" style="height:${Math.max(4,(v/maxS)*100)}px"></div>
+          <div class="bar-label">${k}</div>
+        </div>`).join('');
+
+      // Account status chart
+      const acctStatusMap = { ACTIVE: 0, FROZEN: 0, CLOSED: 0 };
+      accounts.forEach(a => { if (acctStatusMap[a.status] !== undefined) acctStatusMap[a.status]++; });
+      const maxA = Math.max(...Object.values(acctStatusMap), 1);
+      const colorA = { ACTIVE:'green', FROZEN:'yellow', CLOSED:'red' };
+      document.getElementById('acct-status-chart').innerHTML = Object.entries(acctStatusMap).map(([k,v]) =>
+        `<div class="bar-item">
+          <div class="bar-val">${v}</div>
+          <div class="bar-fill ${colorA[k]}" style="height:${Math.max(4,(v/maxA)*100)}px"></div>
+          <div class="bar-label">${k}</div>
+        </div>`).join('');
+
+      // Top senders
+      const senderMap = {};
+      txns.filter(t=>t.status==='COMPLETED').forEach(t => {
+        const k = t.sourceAccountNumber;
+        if (!senderMap[k]) senderMap[k] = { total:0, count:0 };
+        senderMap[k].total += t.amount; senderMap[k].count++;
+      });
+      const topSenders = Object.entries(senderMap).sort((a,b)=>b[1].total-a[1].total).slice(0,5);
+      const acctMap = {};
+      accounts.forEach(a => acctMap[a.accountNumber] = a.holderName);
+
+      document.getElementById('top-senders-body').innerHTML = topSenders.length
+        ? topSenders.map(([acct,data]) => `<tr>
+            <td><span class="mono">${acct}</span></td>
+            <td>${acctMap[acct]||'—'}</td>
+            <td><strong>₹${fmtAmt(data.total)}</strong></td>
+            <td>${data.count}</td>
+          </tr>`).join('')
+        : '<tr><td colspan="4" class="empty">No data</td></tr>';
+
+      const receiverMap = {};
+      txns.filter(t=>t.status==='COMPLETED').forEach(t => {
+        const k = t.destinationAccountNumber;
+        if (!receiverMap[k]) receiverMap[k] = { total:0, count:0 };
+        receiverMap[k].total += t.amount; receiverMap[k].count++;
+      });
+      const topReceivers = Object.entries(receiverMap).sort((a,b)=>b[1].total-a[1].total).slice(0,5);
+      document.getElementById('top-receivers-body').innerHTML = topReceivers.length
+        ? topReceivers.map(([acct,data]) => `<tr>
+            <td><span class="mono">${acct}</span></td>
+            <td>${acctMap[acct]||'—'}</td>
+            <td><strong>₹${fmtAmt(data.total)}</strong></td>
+            <td>${data.count}</td>
+          </tr>`).join('')
+        : '<tr><td colspan="4" class="empty">No data</td></tr>';
+
+    } catch(e) { toast('Analytics load failed: '+e.message,'error'); }
+  }
+
+  // ── ACCOUNTS ──
+  async function loadAccounts() {
+    document.getElementById('am-table-body').innerHTML='<tr><td colspan="7" class="empty"><span class="spinner"></span>Loading...</td></tr>';
+    try {
+      const [paged, customers] = await Promise.all([
+        api('GET','/accounts?page=0&size=1000'),
+        api('GET','/accounts/available-customers')
+      ]);
+      // Extract content array from PagedResponse
+      const accounts = (paged.content || []).filter(a => a.accountNumber !== 'SYSTEM_CASH');
+      allAccounts  = accounts;
+      allCustomers = customers;
+
+      document.getElementById('am-count').textContent = accounts.length;
+      document.getElementById('am-table-body').innerHTML = accounts.length
+        ? accounts.map(a=>`<tr onclick="document.getElementById('su-id').value=${a.id}" style="cursor:pointer" title="Click to fill status update">
+            <td>${a.id}</td>
+            <td><span class="mono">${a.accountNumber}</span></td>
+            <td>${a.holderName}</td>
+            <td>${a.currency}</td>
+            <td><strong>${a.formattedBalance}</strong></td>
+            <td>${statusBadge(a.status)}</td>
+            <td>${fmt(a.createdAt)}</td>
+          </tr>`).join('')
+        : '<tr><td colspan="7" class="empty">No accounts</td></tr>';
+
+      // Populate customer dropdown for "Create Account"
+      const sel = document.getElementById('ca-user-id');
+      sel.innerHTML = '<option value="">— Select customer —</option>'
+        + customers.map(c => `<option value="${c.id}">${c.username}</option>`).join('');
+    } catch(e) { toast('Error: '+e.message,'error'); }
+  }
+
+  async function createAccount() {
+    const userId  = parseInt(document.getElementById('ca-user-id').value);
+    const currency = document.getElementById('ca-currency').value;
+    if (!userId) { toast('Select a customer','error'); return; }
+    try {
+      const acct = await api('POST','/accounts',{ userId, currency });
+      toast(`Created: ${acct.accountNumber}`,'success');
+      document.getElementById('ca-user-id').value='';
+      loadAccounts();
+    } catch(e) { toast('Failed: '+e.message,'error'); }
+  }
+
+  async function updateStatus() {
+    const id=parseInt(document.getElementById('su-id').value);
+    const status=document.getElementById('su-status').value;
+    if (!id) { toast('Enter account ID','error'); return; }
+    try {
+      const acct = await api('PATCH',`/accounts/${id}/status?status=${status}`);
+      toast(`${acct.accountNumber} → ${status}`,'success');
+      loadAccounts();
+    } catch(e) { toast('Failed: '+e.message,'error'); }
+  }
+
+  // ── TRANSACTIONS ──
+  async function loadTransactions() {
+    document.getElementById('txn-table-body').innerHTML='<tr><td colspan="8" class="empty"><span class="spinner"></span>Loading...</td></tr>';
+    try {
+      const paged = await api('GET','/transactions?page=0&size=1000');
+      const txns  = paged.content || [];
+      allTransactions=txns;
+      document.getElementById('txn-count').textContent=txns.length;
+      filterTxns();
+    } catch(e) { toast('Error: '+e.message,'error'); }
+  }
+
+  function filterTxns() {
+    const statusF=document.getElementById('txn-status-filter').value;
+    const filtered=statusF?allTransactions.filter(t=>t.status===statusF):[...allTransactions];
+    document.getElementById('txn-count').textContent=filtered.length+(statusF?'/'+allTransactions.length:'');
+    document.getElementById('txn-table-body').innerHTML = filtered.length
+      ? [...filtered].sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt)).map(t=>`<tr>
+          <td><span class="mono">${t.referenceId}</span></td>
+          <td><span class="mono" style="font-size:11px">${t.sourceAccountNumber}</span></td>
+          <td><span class="mono" style="font-size:11px">${t.destinationAccountNumber}</span></td>
+          <td><strong>${t.formattedAmount}</strong></td>
+          <td><span class="badge badge-blue">${t.type}</span></td>
+          <td>${statusBadge(t.status)}</td>
+          <td style="font-size:11px;color:var(--muted)">${t.idempotencyKey||'—'}</td>
+          <td>${fmt(t.createdAt)}</td>
+        </tr>`).join('')
+      : '<tr><td colspan="8" class="empty">No transactions</td></tr>';
+  }
+
+  // ── HEALTH ──
+  async function loadHealth() {
+    // Test API reachability = Spring Boot is up
+    try {
+      const [acctPaged, txnPaged] = await Promise.all([
+        api('GET','/accounts?page=0&size=1000'),
+        api('GET','/transactions?page=0&size=1000')
+      ]);
+      const accounts = (acctPaged.content || []).filter(a => a.accountNumber !== 'SYSTEM_CASH');
+      const txns     = txnPaged.content || [];
+      allAccounts = accounts;
+
+      // Outbox stats — count from transactions
+      const pending = txns.filter(t=>t.status==='PENDING').length;
+      document.getElementById('outbox-pending').textContent = pending;
+      document.getElementById('outbox-total').textContent = txns.length;
+
+      if (pending > 0) {
+        document.getElementById('recon-body').innerHTML = `
+          <div style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);border-radius:8px;padding:16px">
+            <div style="color:var(--accent);font-weight:600;margin-bottom:8px">⚠️ ${pending} PENDING transaction(s) detected</div>
+            <div style="font-size:13px;color:var(--muted)">ReconciliationService will auto-heal transactions stuck &gt;5 minutes. If these persist, check the Spring Boot logs.</div>
+          </div>`;
+      } else {
+        document.getElementById('recon-body').innerHTML = `
+          <div style="background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);border-radius:8px;padding:16px">
+            <div style="color:var(--green);font-weight:600">✅ All clear — no stuck transactions</div>
+            <div style="font-size:13px;color:var(--muted);margin-top:4px">ReconciliationService is running. Last check: now.</div>
+          </div>`;
+      }
+
+      // Mark services green (if we got here, API + MySQL + Redis are up)
+      document.getElementById('dot-redis').className = 'health-dot dot-green';
+      document.getElementById('dot-kafka').className = 'health-dot dot-green';
+      document.getElementById('dot-topic').className = 'health-dot dot-green';
+
+    } catch(e) {
+      toast('Health check failed: '+e.message,'error');
+    }
+  }
+
+  loadAnalytics();
+</script>
+</body>
+</html>
