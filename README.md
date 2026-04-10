@@ -1,313 +1,396 @@
-# PayLedger
+<div align="center">
 
-> **Enterprise-grade payment infrastructure — built from scratch**
+# 💳 PayLedger
+### Enterprise-grade Payment Infrastructure — Built from Scratch
 
-A full-stack payment management system simulating real-world banking operations across three dedicated role-based portals. Built with Spring Boot 4, React 18, and production-grade patterns including JWT auth, double-entry ledger, OTP verification, Kafka outbox, and optimistic locking.
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.x-6DB33F?style=flat-square&logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
+[![React](https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev)
+[![TiDB Cloud](https://img.shields.io/badge/TiDB%20Cloud-MySQL--Compatible-FF2D20?style=flat-square&logo=mysql&logoColor=white)](https://tidbcloud.com)
+[![Redis](https://img.shields.io/badge/Redis-Upstash-DC382D?style=flat-square&logo=redis&logoColor=white)](https://upstash.com)
+[![Render](https://img.shields.io/badge/API-Render-46E3B7?style=flat-square&logo=render&logoColor=black)](https://render.com)
+[![Vercel](https://img.shields.io/badge/Frontend-Vercel-000000?style=flat-square&logo=vercel&logoColor=white)](https://vercel.com)
+[![JWT](https://img.shields.io/badge/Auth-JWT-000000?style=flat-square&logo=jsonwebtokens&logoColor=white)]()
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
 
----
+A production-grade, multi-portal payment system with double-entry accounting, OTP-gated transfers, multi-currency FX, Kafka transactional outbox, and optimistic locking — built entirely from scratch.
 
-## Links
+**Open all three portals. Follow the steps below. You'll see the full system in under 5 minutes.**
 
-**GitHub:** https://github.com/darshan3131/payment-ledger
-
-## Local Demo
-
-| Portal | URL | Credentials |
-|--------|-----|-------------|
-| 🧑 Customer | `localhost:3000` | Register via OTP |
-| 🏦 Backoffice | `localhost:3001` | Created by Admin |
-| 🔐 Admin | `localhost:3002` | `admin / Admin@1234` |
-
-> **OTP in dev mode is always `123456`**
+</div>
 
 ---
 
-## Screenshots
+## 🚀 Try It — Full Demo in 5 Minutes
 
-<!-- Add your screenshots here after running the app -->
+> **Open these three tabs before you start.** The experience only makes sense when you see all three portals react to each other.
 
-| Customer Portal | Backoffice Portal | Admin Console |
-|:-:|:-:|:-:|
-| ![Customer](docs/screenshots/customer-dashboard.png) | ![Backoffice](docs/screenshots/backoffice-accounts.png) | ![Admin](docs/screenshots/admin-users.png) |
+| Tab | Portal | URL | Login |
+|-----|--------|-----|-------|
+| Tab 1 | 🧑 Customer | [payment-ledger-6rqk.vercel.app](https://payment-ledger-6rqk.vercel.app) | You'll register here |
+| Tab 2 | 🏦 Backoffice | [payment-ledger-5qx9.vercel.app](https://payment-ledger-5qx9.vercel.app) | `backoffice1 / Backoffice@1234` |
+| Tab 3 | 🔐 Admin | [payment-ledger-bt73.vercel.app](https://payment-ledger-bt73.vercel.app) | `admin / Admin@1234` |
+
+> ⚠️ **First load is slow** — backend is on Render free tier (cold start ~15s). Once it responds, everything is fast.
 
 ---
 
-## Architecture
+### Step 1 — Register as a Customer `[Tab 1: Customer]`
+
+1. Click **"Create account"**
+2. Enter any **username** and **phone number** (format: `+91XXXXXXXXXX`)
+3. Click **Send OTP** → enter **`123456`** (dev mode — no real SMS)
+4. Set your **password** and complete registration
+5. **Login** with your new credentials
+6. You'll see: *"No account linked — contact back office to create one"* ✅ That's correct. Move to Step 2.
+
+---
+
+### Step 2 — Open a Bank Account for Yourself `[Tab 2: Backoffice]`
+
+1. Login as `backoffice1 / Backoffice@1234`
+2. Go to **Accounts** (already open by default)
+3. In the **"Open new account"** panel on the left:
+   - Toggle **"New customers only"** if needed
+   - Select your username from the dropdown
+   - Pick a **Currency** — try **USD** to see multi-currency in action
+   - Click **Open account**
+4. Your account appears in the table with balance `$0.00` ✅
+
+---
+
+### Step 3 — Deposit Money `[Tab 2: Backoffice]`
+
+1. Find your account row in the table
+2. Click the **↓ Dep** (Deposit) button
+3. Enter `100000` in the amount field — that's **$1,000.00** (amounts are in cents/subunits)
+   - Watch the live preview: `= $1,000.00`
+4. Click **Deposit** → balance updates to `$1,000.00` ✅
+5. Click **Transactions** in the sidebar — your DEPOSIT appears instantly
+
+---
+
+### Step 4 — Send Money `[Tab 1: Customer]`
+
+1. Switch back to your Customer tab and **refresh**
+2. Your dashboard now shows `$1,000.00` balance 🎉
+3. Click **Send money** (or Transfer)
+4. Enter **any existing account number** as destination (e.g. `ACC9FD9B99E754A`)
+5. Enter amount `2000` (= $20.00) → Submit → **COMPLETED instantly** ✅
+6. Now try a high-value transfer: amount `1500000` (= $15,000)
+   → **OTP gate fires** — enter `123456` → **COMPLETED** ✅
+
+---
+
+### Step 5 — Watch the Admin See Everything `[Tab 3: Admin]`
+
+1. Switch to the Admin tab
+2. Go to **Analytics** — your deposits and transfers appear in the charts
+   - Total Volume updated (FX-normalized to INR for cross-currency comparison)
+   - Top Senders / Receivers table shows your account with `$` symbol
+3. Go to **Users** — your newly registered account is in the list
+4. Go to **System health** — all services green, Outbox pipeline: 0 stuck
+
+---
+
+### Bonus — Freeze, Reverse, Support `[Tab 2: Backoffice]`
+
+- **Freeze an account**: Accounts → click a row → Update status → FROZEN → customer can no longer transfer
+- **Reverse a transfer**: Transactions → click any COMPLETED transfer → **Reverse** → money flows back
+- **Support tickets**: Create a ticket in the Customer portal → resolve it in Backoffice
+
+---
+
+## 🌟 Why This Project Is Different
+
+Most portfolio projects stop at CRUD. PayLedger deliberately solves the hard problems that show up in real production systems:
+
+| Problem | PayLedger's Solution |
+|---------|---------------------|
+| 💸 Double-charge on network retry | **Idempotency keys** in Redis — same request returns cached result, DB never runs twice |
+| ⚡ Race condition on concurrent transfers | **`@Version` optimistic locking** — second writer detects stale version, returns HTTP 409 immediately, no row locks |
+| 📡 SMS/notification failure inside a transaction | **Kafka transactional outbox** — event written to DB atomically with payment; Kafka relay is async and retried |
+| 💱 Multi-currency arithmetic errors | **Integer subunits only** (paise, cents) — `0.1 + 0.2 ≠ 0.3` in IEEE 754; Long arithmetic is exact |
+| 🔐 Admin lockout with no DB access | **`SystemBootstrap`** re-seeds credentials on every JVM start and restores `enabled` flag — self-healing |
+| 🔒 CORS security hole | **3-origin whitelist** in SecurityConfig — only the three Vercel URLs allowed, no wildcard `*` |
+| 🔄 Stuck PENDING transactions | **`ReconciliationService`** marks PENDING txns older than 5 min as FAILED — automatic crash recovery |
+
+---
+
+## 🏗️ Architecture
 
 ```
-┌──────────────┐  ┌──────────────┐  ┌──────────────┐
-│  Customer    │  │  Backoffice  │  │    Admin     │
-│  :3000       │  │  :3001       │  │  :3002       │
-└──────┬───────┘  └──────┬───────┘  └──────┬───────┘
-       │                 │                 │
-       └─────────────────┼─────────────────┘
-                         │  REST API (JWT + CORS)
-                         ▼
-              ┌──────────────────────┐
-              │  Spring Boot  :8080  │
-              │  SecurityConfig      │
-              │  JwtFilter           │
-              │  Controllers         │
-              │  Services            │
-              │  Repositories        │
-              └───┬──────┬──────┬───┘
-                  │      │      │
-            ┌─────┘  ┌───┘  ┌──┘
-            ▼        ▼      ▼
-          MySQL    Redis   Kafka
-          (JPA)   (OTP +  (Outbox
-                  Idem.)   Events)
+┌───────────────┐   ┌───────────────┐   ┌───────────────┐
+│  🧑 Customer  │   │  🏦 Backoffice│   │  🔐 Admin     │
+│  Vercel       │   │  Vercel       │   │  Vercel       │
+│  React + Vite │   │  React + Vite │   │  React + Vite │
+└──────┬────────┘   └──────┬────────┘   └──────┬────────┘
+       │                   │                   │
+       └───────────────────┼───────────────────┘
+                           │  HTTPS REST · JWT Bearer
+                           ▼
+            ┌──────────────────────────┐
+            │   Spring Boot API        │  ← Render (free tier)
+            │                          │
+            │  SecurityConfig          │  ← 3-origin CORS whitelist
+            │  JwtFilter               │  ← Stateless auth
+            │  GlobalExceptionHandler  │  ← Consistent error shape
+            │                          │
+            │  TransactionService      │  ← Double-entry + FX convert
+            │  AccountService          │  ← Optimistic locking (@Version)
+            │  ReconciliationService   │  ← Stuck-txn cleanup
+            │  OutboxPoller            │  ← Kafka relay (async)
+            └────┬──────┬──────┬───────┘
+                 │      │      │
+           ┌─────▼──┐ ┌─▼───┐ ┌▼──────┐
+           │TiDB    │ │Redis│ │Kafka  │
+           │Cloud   │ │OTP +│ │Outbox │
+           │(MySQL) │ │Idem.│ │Events │
+           └────────┘ └─────┘ └───────┘
 ```
 
 ---
 
-## Tech Stack
+## 📸 Screenshots
+
+<table>
+  <tr>
+    <td align="center"><b>🔐 Admin · Analytics Dashboard</b></td>
+    <td align="center"><b>👥 Admin · User Management</b></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/admin-analytics.png" alt="Admin Analytics"/></td>
+    <td><img src="docs/screenshots/admin-users.png" alt="Admin Users"/></td>
+  </tr>
+  <tr>
+    <td align="center"><b>🩺 Admin · System Health</b></td>
+    <td align="center"><b>🏦 Backoffice · Accounts</b></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/admin-system-health.png" alt="System Health"/></td>
+    <td><img src="docs/screenshots/backoffice-accounts.png" alt="Backoffice Accounts"/></td>
+  </tr>
+  <tr>
+    <td align="center"><b>💸 Backoffice · Transactions</b></td>
+    <td align="center"><b>🧑 Customer · Login</b></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/backoffice-transactions.png" alt="Transactions"/></td>
+    <td><img src="docs/screenshots/customer-login.png" alt="Customer Login"/></td>
+  </tr>
+</table>
+
+---
+
+## ⚙️ Tech Stack
 
 ### Backend
-| Layer | Technology |
-|-------|-----------|
-| Framework | Spring Boot 4 |
-| Auth | Spring Security + JWT (stateless, 24h) |
-| ORM | JPA / Hibernate (`ddl-auto=update`) |
-| Database | MySQL 8 |
-| Cache / OTP | Redis (5-min TTL, key prefix namespacing) |
-| Messaging | Apache Kafka (outbox pattern) |
-| SMS | Twilio REST API |
-| Build | Maven (mvnw wrapper) |
+| Layer | Technology | Why |
+|-------|-----------|-----|
+| Framework | Spring Boot 3 | Industry-standard Java API framework |
+| Auth | Spring Security + JWT | Stateless, scalable, role-enforced |
+| ORM | JPA / Hibernate + `@Version` | Optimistic locking without DB-level row locks |
+| Database | TiDB Cloud (MySQL-compatible) | Horizontally scalable, generous free tier |
+| Cache / OTP | Upstash Redis (TTL-based) | OTP expiry + idempotency key storage |
+| Messaging | Apache Kafka | Transactional outbox event relay |
+| SMS | Twilio REST API | OTP + transaction notifications |
+| Migrations | Flyway | Versioned, auditable schema changes |
+| Build | Maven | Standard Java build tool |
 
-### Frontend
-| Portal | Stack |
-|--------|-------|
-| Customer (`:3000`) | React 18, Vite, Axios interceptors |
-| Backoffice (`:3001`) | React 18, Vite, Axios interceptors |
-| Admin (`:3002`) | React 18, Vite, Axios interceptors |
+### Frontend (×3 separate portals)
+| | Technology | Why |
+|--|-----------|-----|
+| UI | React 18 | Component model, hooks, fast reconciler |
+| Bundler | Vite | Sub-second HMR, fast production builds |
+| HTTP | Axios interceptors | Auto-attach JWT, redirect on 401 |
 
 ### Infrastructure
-| Tool | Purpose |
-|------|---------|
-| PM2 | Process manager for all 4 processes |
-| Redis | OTP storage + idempotency key store |
-| Kafka | Outbox event relay (SMS notifications) |
-| BCrypt | Password hashing (cost factor 10) |
+| | Hosting | Notes |
+|--|---------|-------|
+| API | Render (free) | Cold start ~15s; no cost for a portfolio project |
+| 3 Frontends | Vercel (free) | Instant global CDN, per-portal deploys |
 
 ---
 
-## Key Features
+## ✅ Feature Checklist
 
-### Double-Entry Ledger
-Every transfer creates exactly **2 ledger entries** — one DEBIT, one CREDIT. No money is ever created or destroyed; it only moves between accounts. A special `SYSTEM_CASH` float account is the source for all deposits and sink for all withdrawals.
+**Security**
+- [x] JWT stateless auth (24h expiry), BCrypt (cost 10)
+- [x] Role-based access (`ADMIN` / `BACKOFFICE` / `CUSTOMER`) via `@PreAuthorize`
+- [x] OTP-gated registration + high-value transfers (Redis, 5-min TTL)
+- [x] CORS locked to 3 specific Vercel origins — no wildcard
+- [x] Self-healing admin credentials (`SystemBootstrap` runs on every startup)
 
-```
-Customer deposits ₹10,000:
-  DEBIT  → SYSTEM_CASH        ₹10,000
-  CREDIT → Customer Account   ₹10,000
-```
+**Financial Correctness**
+- [x] Double-entry bookkeeping — every payment = 1 DEBIT + 1 CREDIT
+- [x] `SYSTEM_CASH` float account — sole entry and exit point for money in the system
+- [x] All amounts stored as integer subunits — zero floating-point arithmetic
+- [x] 10-currency FX support (INR, USD, EUR, GBP, JPY, AED, SGD, SAR, CAD, AUD)
+- [x] Cross-currency reversal — debits destination in its own currency
+- [x] Transaction reversal with mirror ledger entries
 
-### OTP-Gated High-Value Transfers
-Transfers ≥ ₹10,000 return **HTTP 428 Precondition Required**. The client must:
-1. `POST /api/v1/transactions/request-otp` → OTP stored in Redis (`txn-otp:` prefix, 5-min TTL)
-2. Resubmit the transfer with the OTP field populated
+**Reliability**
+- [x] Optimistic locking — prevents lost-update races without row locks
+- [x] Idempotency keys — duplicate requests return cached result, no double-charge
+- [x] Kafka transactional outbox — events survive Kafka downtime, at-least-once delivery
+- [x] ReconciliationService — auto-fails stuck PENDING transactions every 5 min
+- [x] JOIN FETCH on analytics — no N+1 query problem
 
-```java
-if (request.getAmount() >= highValueThreshold) {
-    if (request.getOtp() == null || request.getOtp().isBlank()) {
-        throw new IllegalArgumentException("OTP_REQUIRED:...");  // → HTTP 428
-    }
-    otpService.verifyAndConsume("txn-otp:" + accountNumber, request.getOtp());
-}
-```
-
-### Idempotency Keys
-Every transfer can include an `idempotencyKey`. Duplicate requests with the same key return the original response — preventing double-charges on network retries.
-
-### Optimistic Locking
-`@Version` on the `Account` entity prevents the **lost update** problem. If two concurrent requests read the same account (version=5) and both try to update, the second write detects version mismatch and throws `ObjectOptimisticLockingFailureException` → HTTP 409.
-
-### Kafka Outbox Pattern
-Transactions write to an `outbox_events` table **within the same DB transaction**. A scheduler polls the outbox and publishes to Kafka. A consumer reads from Kafka and sends SMS/webhook. This guarantees at-least-once delivery even if Kafka is down.
-
-### Role-Based Access Control
-| Role | Can Do |
-|------|--------|
-| `CUSTOMER` | Register, login, view own accounts, send money, raise tickets |
-| `BACKOFFICE` | Open accounts, deposit/withdraw, reverse transactions, manage tickets |
-| `ADMIN` | Create users, manage roles, view analytics, freeze/close accounts |
+**Product**
+- [x] 3 role-separated portals (each knows nothing about the others)
+- [x] Paginated transaction history with search and filter
+- [x] Account ledger statement (full DEBIT/CREDIT audit trail)
+- [x] Account status management (ACTIVE → FROZEN → CLOSED)
+- [x] Support ticket system (raise → resolve)
+- [x] SMS notifications on transfer, deposit, withdrawal, OTP (Twilio)
+- [x] Analytics dashboard — FX-normalized volume, top accounts
 
 ---
 
-## API Reference
+## 💡 Key Engineering Decisions
 
-### Auth
-```
-POST   /api/v1/auth/register          Register (step 2 of OTP flow)
-POST   /api/v1/auth/login             Login → JWT
-POST   /api/v1/auth/send-otp          Send OTP to phone
-POST   /api/v1/auth/verify-otp        Verify OTP
-POST   /api/v1/auth/forgot-password   Send reset OTP
-POST   /api/v1/auth/reset-password    Set new password
-POST   /api/v1/auth/change-password   Change password (authenticated)
-```
+**Why store money as `Long` (paise/cents), not `Double` (rupees/dollars)?**
+`0.1 + 0.2 = 0.30000000000000004` in IEEE 754. Financial systems require exact arithmetic. Every amount in the DB is the smallest currency unit — paise for INR, cents for USD. Arithmetic stays in integer space: exact, deterministic, auditable at every step.
 
-### Accounts
-```
-GET    /api/v1/accounts               Paginated list (BACKOFFICE/ADMIN)
-POST   /api/v1/accounts               Create account
-GET    /api/v1/accounts/my            My accounts (CUSTOMER)
-GET    /api/v1/accounts/{id}          Get by ID
-GET    /api/v1/accounts/number/{n}    Get by account number
-PATCH  /api/v1/accounts/{id}/status   Update status (FROZEN, CLOSED, ACTIVE)
-GET    /api/v1/accounts/{id}/ledger   Account statement
-```
+**Why Kafka outbox instead of calling Twilio directly?**
+Putting an external API call inside a DB transaction couples two systems that shouldn't be coupled. If Twilio is slow, your payment is slow. If Twilio throws, does the payment roll back? The outbox writes the event to the DB atomically with the payment. A background poller delivers it asynchronously. SMS is eventual but guaranteed — payment speed is unaffected.
 
-### Transactions
-```
-POST   /api/v1/transactions           Process transfer (CUSTOMER)
-POST   /api/v1/transactions/request-otp  Request high-value OTP
-POST   /api/v1/transactions/deposit   Deposit (BACKOFFICE/ADMIN)
-POST   /api/v1/transactions/withdraw  Withdraw (BACKOFFICE/ADMIN)
-POST   /api/v1/transactions/{ref}/reverse  Reverse (BACKOFFICE/ADMIN)
-GET    /api/v1/transactions           Paginated list
-GET    /api/v1/transactions/{ref}     Get by reference ID
-GET    /api/v1/transactions/account/{id}  By account (paginated)
-```
+**Why optimistic locking instead of pessimistic row locks?**
+Pessimistic locks serialize all writers to the same account — throughput dies under any concurrency. Optimistic locking assumes no conflict (true for 99% of transfers between *different* accounts) and only pays the cost when an actual race occurs. Lower latency, no deadlocks, automatic retry possible.
 
-### Analytics (ADMIN)
-```
-GET    /api/v1/analytics              System-wide stats
-```
+**Why three separate React apps instead of one with role-based routes?**
+Role separation at the network level, not just the route level. The customer bundle has zero knowledge of admin endpoints — there's nothing to intercept or exploit. Each portal has its own Vercel deployment, CSP headers, and CORS policy. This mirrors how real fintech teams structure their internal tooling.
 
 ---
 
-## Local Setup
-
-### Prerequisites
-- Java 17+
-- Node 18+
-- MySQL 8 (running locally — create DB `payment_ledger_db`)
-- Redis 7 (running locally on port 6379)
-- Maven (or use `./mvnw`)
-
-> Kafka is optional for local dev. The outbox poller will log warnings but all core features (auth, transfers, OTP, ledger) work without it.
-
-### 1. Configure backend
-Edit `src/main/resources/application.properties` with your local MySQL credentials:
-```properties
-spring.datasource.url=jdbc:mysql://localhost:3306/payment_ledger_db?createDatabaseIfNotExist=true
-spring.datasource.username=root
-spring.datasource.password=your-mysql-password
-
-otp.dev-mode=true   # OTP hardcoded to 123456 — no SMS needed in dev
-```
-
-### 2. Build and run backend
-```bash
-./mvnw clean package -DskipTests
-pm2 start "java -jar target/payment-ledger-0.0.1-SNAPSHOT.jar" --name spring-boot
-```
-
-### 3. Run frontend portals
-```bash
-cd frontend/customer   && npm install && pm2 start "npm run dev" --name customer
-cd ../backoffice       && npm install && pm2 start "npm run dev" --name backoffice
-cd ../admin            && npm install && pm2 start "npm run dev" --name admin
-```
-
-### 4. Verify all processes
-```bash
-pm2 list
-# spring-boot  online
-# customer     online
-# backoffice   online
-# admin        online
-```
-
----
-
-## End-to-End Test Flow
-
-```
-1. Admin (localhost:3002)
-   └─ Create BACKOFFICE user (e.g. ops1 / Backoffice@123)
-   └─ Create CUSTOMER user (e.g. cust1, phone: 9876543210)
-
-2. Customer (localhost:3000)
-   └─ Register cust1 (OTP: 123456) → set password → login
-
-3. Backoffice (localhost:3001)
-   └─ Login as ops1
-   └─ Open account for cust1 → auto-generates ACC-XXXX
-   └─ Deposit ₹1,00,000 (enter 10000000 paise)
-
-4. Customer (localhost:3000)
-   └─ Send ₹500 → completes instantly
-   └─ Send ₹15,000 → OTP gate → enter 123456 → completes
-   └─ View statement → see DEBIT entries
-
-5. Backoffice (localhost:3001)
-   └─ Reverse the ₹15,000 transaction
-   └─ Freeze cust1's account
-
-6. Customer (localhost:3000)
-   └─ Try transfer → blocked (account frozen)
-   └─ Raise support ticket
-
-7. Backoffice (localhost:3001)
-   └─ Resolve support ticket
-
-8. Admin (localhost:3002)
-   └─ Unfreeze account → set status ACTIVE
-   └─ View analytics dashboard
-```
-
----
-
-## Project Structure
+## 🗂️ Project Structure
 
 ```
 payment-ledger/
 ├── src/main/java/com/darshan/payment_ledger/
-│   ├── config/          # Security, Kafka, Redis, SystemBootstrap
-│   ├── controller/      # REST controllers (Account, Auth, Transaction, etc.)
-│   ├── dto/             # Request/Response DTOs + PagedResponse
-│   ├── entity/          # JPA entities (Account, User, Transaction, LedgerEntry…)
-│   ├── enums/           # AccountStatus, Currency, Role, TransactionType…
-│   ├── exception/       # Custom exceptions + GlobalExceptionHandler
-│   ├── repository/      # Spring Data JPA repositories
+│   ├── config/          # SecurityConfig, KafkaConfig, SystemBootstrap
+│   ├── controller/      # REST controllers — Account, Auth, Transaction, Analytics…
+│   ├── dto/             # Request/Response DTOs, AnalyticsResponse, PagedResponse
+│   ├── entity/          # Account, User, Transaction, LedgerEntry, OutboxEvent
+│   ├── enums/           # AccountStatus, Currency (10), Role, TransactionType
+│   ├── exception/       # GlobalExceptionHandler + custom exceptions
+│   ├── repository/      # Spring Data JPA repos + custom @Query methods
 │   ├── security/        # JwtFilter, JwtUtil, UserDetailsServiceImpl
-│   └── service/         # Business logic (AccountService, TransactionService…)
+│   ├── service/         # AccountService, TransactionService, AnalyticsService…
+│   └── util/            # CurrencyConverter — FX rates, subunit arithmetic
+├── src/main/resources/
+│   └── db/migration/    # Flyway: V1 baseline → V2 transactions → V3 ledger…
 ├── frontend/
-│   ├── customer/        # React app (Vite) — port 3000
-│   ├── backoffice/      # React app (Vite) — port 3001
-│   └── admin/           # React app (Vite) — port 3002
-├── render.yaml          # Render deployment config (free tier)
-├── DEPLOY_FREE.md       # Step-by-step free deployment guide (Render + Vercel)
+│   ├── customer/        # React 18 + Vite  (port 3000)
+│   ├── backoffice/      # React 18 + Vite  (port 3001)
+│   └── admin/           # React 18 + Vite  (port 3002)
+├── render.yaml          # Render free-tier deployment config
 └── pom.xml
 ```
 
 ---
 
-## Design Decisions
+## 🏃 Local Setup
 
-**Why balances in paise (Long) not rupees (Double)?**
-Floating-point arithmetic is non-deterministic for money. `0.1 + 0.2 = 0.30000000000000004` in Java. Long integer arithmetic is exact. All amounts are stored as the smallest currency unit (paise for INR, cents for USD) and formatted only at the display layer.
+### Prerequisites
+Java 17+, Maven, Node 18+, MySQL 8, Redis 7
 
-**Why Kafka outbox instead of direct SMS?**
-Calling Twilio inside a DB transaction couples two external systems. If Twilio fails, should the transaction fail? No. The outbox pattern writes the event to the DB within the same transaction (atomically), then a separate process retries Kafka publish until it succeeds. SMS is eventual but guaranteed.
+### Backend
+```bash
+git clone https://github.com/darshan3131/payment-ledger.git
+cd payment-ledger
 
-**Why optimistic locking instead of pessimistic?**
-Pessimistic locking (DB row lock) serializes all transfers — terrible for throughput. Optimistic locking assumes no conflict (which is true for 99% of transfers between different accounts) and only fails on actual simultaneous writes to the same account. Lower latency, no deadlocks.
+# Edit src/main/resources/application.properties:
+#   spring.datasource.url=jdbc:mysql://localhost:3306/payment_ledger_db?createDatabaseIfNotExist=true
+#   spring.datasource.username=root
+#   spring.datasource.password=YOUR_PASSWORD
+#   otp.dev-mode=true   ← OTP is always 123456 in dev
 
-**Why three separate React apps instead of one?**
-Role separation is enforced at the network level. A customer can't accidentally stumble onto the admin portal. In production each portal gets its own subdomain with separate CORS and auth policies. Reflects how real fintech companies separate internal tooling from customer-facing products.
+./mvnw clean package -DskipTests
+java -jar target/payment-ledger-0.0.1-SNAPSHOT.jar
+```
+
+### Frontend (3 terminals)
+```bash
+cd frontend/customer   && npm install && npm run dev   # http://localhost:3000
+cd frontend/backoffice && npm install && npm run dev   # http://localhost:3001
+cd frontend/admin      && npm install && npm run dev   # http://localhost:3002
+```
 
 ---
 
-## Author
+## 🗺️ API Reference
 
-**K C Darshan Siddarth**
-Full Stack Developer · Bengaluru, India
-📧 darshansiddarth05@gmail.com
+<details>
+<summary><b>Auth</b></summary>
+
+```
+POST  /api/v1/auth/send-otp          Send OTP to phone
+POST  /api/v1/auth/verify-otp        Verify OTP
+POST  /api/v1/auth/register          Complete registration
+POST  /api/v1/auth/login             Login → JWT
+POST  /api/v1/auth/forgot-password   Password reset OTP
+POST  /api/v1/auth/reset-password    Set new password
+POST  /api/v1/auth/change-password   Change password (authenticated)
+```
+</details>
+
+<details>
+<summary><b>Accounts</b></summary>
+
+```
+GET   /api/v1/accounts               All accounts (BACKOFFICE/ADMIN, paginated)
+POST  /api/v1/accounts               Open new account
+GET   /api/v1/accounts/my            My accounts (CUSTOMER)
+GET   /api/v1/accounts/{id}          By ID
+GET   /api/v1/accounts/number/{n}    By account number
+PATCH /api/v1/accounts/{id}/status   Update status (FROZEN / CLOSED / ACTIVE)
+GET   /api/v1/accounts/{id}/ledger   Account statement
+```
+</details>
+
+<details>
+<summary><b>Transactions</b></summary>
+
+```
+POST  /api/v1/transactions              Transfer (CUSTOMER)
+POST  /api/v1/transactions/request-otp  Request high-value OTP
+POST  /api/v1/transactions/deposit      Deposit (BACKOFFICE/ADMIN)
+POST  /api/v1/transactions/withdraw     Withdraw (BACKOFFICE/ADMIN)
+POST  /api/v1/transactions/{ref}/reverse  Reverse transfer (BACKOFFICE/ADMIN)
+GET   /api/v1/transactions              All transactions (paginated)
+GET   /api/v1/transactions/{ref}        By reference ID
+GET   /api/v1/transactions/account/{id} By account (paginated)
+```
+</details>
+
+<details>
+<summary><b>Other</b></summary>
+
+```
+GET   /api/v1/analytics              System-wide stats (ADMIN)
+GET   /api/v1/ledger/{accountId}     Ledger entries by account
+POST  /api/v1/support                Raise support ticket (CUSTOMER)
+GET   /api/v1/support                All tickets (BACKOFFICE/ADMIN)
+PATCH /api/v1/support/{id}/resolve   Resolve ticket
+GET   /api/v1/users                  All users (ADMIN)
+POST  /api/v1/users                  Create user (ADMIN)
+GET   /actuator/health               Service health (public)
+```
+</details>
 
 ---
 
-*Built as a comprehensive portfolio project demonstrating enterprise Spring Boot patterns, double-entry accounting, and production-grade security.*
+## 👤 Author
+
+**K C Darshan Siddarth** · Full-Stack Developer · Bengaluru, India
+
+[![GitHub](https://img.shields.io/badge/GitHub-darshan3131-181717?style=flat-square&logo=github)](https://github.com/darshan3131)
+[![Email](https://img.shields.io/badge/Email-darshansiddarth05%40gmail.com-EA4335?style=flat-square&logo=gmail&logoColor=white)](mailto:darshansiddarth05@gmail.com)
+
+---
+
+<div align="center">
+<i>Built to demonstrate that a junior engineer can ship production-grade architecture — not just CRUD.</i>
+
+⭐ Star this repo if it taught you something.
+</div>
