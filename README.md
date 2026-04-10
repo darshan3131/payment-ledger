@@ -6,7 +6,11 @@ A full-stack payment management system simulating real-world banking operations 
 
 ---
 
-## Live Demo
+## Links
+
+**GitHub:** https://github.com/darshan3131/payment-ledger
+
+## Local Demo
 
 | Portal | URL | Credentials |
 |--------|-----|-------------|
@@ -179,40 +183,36 @@ GET    /api/v1/analytics              System-wide stats
 ### Prerequisites
 - Java 17+
 - Node 18+
-- MySQL 8
-- Redis 7
-- Apache Kafka 3+ (or use Docker for infra only)
+- MySQL 8 (running locally — create DB `payment_ledger_db`)
+- Redis 7 (running locally on port 6379)
 - Maven (or use `./mvnw`)
 
-### 1. Start infrastructure (Docker — optional but easiest)
-```bash
-docker-compose up -d mysql redis kafka
-```
+> Kafka is optional for local dev. The outbox poller will log warnings but all core features (auth, transfers, OTP, ledger) work without it.
 
-### 2. Configure backend
+### 1. Configure backend
+Edit `src/main/resources/application.properties` with your local MySQL credentials:
 ```properties
-# src/main/resources/application.properties
-spring.datasource.url=jdbc:mysql://localhost:3306/payment_ledger_db
+spring.datasource.url=jdbc:mysql://localhost:3306/payment_ledger_db?createDatabaseIfNotExist=true
 spring.datasource.username=root
-spring.datasource.password=your-password
+spring.datasource.password=your-mysql-password
 
-otp.dev-mode=true   # OTP hardcoded to 123456 in dev
+otp.dev-mode=true   # OTP hardcoded to 123456 — no SMS needed in dev
 ```
 
-### 3. Build and run backend
+### 2. Build and run backend
 ```bash
 ./mvnw clean package -DskipTests
 pm2 start "java -jar target/payment-ledger-0.0.1-SNAPSHOT.jar" --name spring-boot
 ```
 
-### 4. Run frontend portals
+### 3. Run frontend portals
 ```bash
 cd frontend/customer   && npm install && pm2 start "npm run dev" --name customer
 cd ../backoffice       && npm install && pm2 start "npm run dev" --name backoffice
 cd ../admin            && npm install && pm2 start "npm run dev" --name admin
 ```
 
-### 5. Verify all processes
+### 4. Verify all processes
 ```bash
 pm2 list
 # spring-boot  online
@@ -279,8 +279,8 @@ payment-ledger/
 │   ├── customer/        # React app (Vite) — port 3000
 │   ├── backoffice/      # React app (Vite) — port 3001
 │   └── admin/           # React app (Vite) — port 3002
-├── docker-compose.yml   # Infrastructure: MySQL, Redis, Kafka
-├── Dockerfile           # Spring Boot container (for full Docker deployment)
+├── render.yaml          # Render deployment config (free tier)
+├── DEPLOY_FREE.md       # Step-by-step free deployment guide (Render + Vercel)
 └── pom.xml
 ```
 

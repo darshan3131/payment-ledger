@@ -113,10 +113,11 @@ Core features work without Kafka. To enable:
 
 ## Local Dev
 
+Requires MySQL 8 and Redis 7 running locally.
+
 ```bash
-docker-compose up -d mysql redis
 ./mvnw spring-boot:run
-cd frontend/customer  && npm run dev   # :3000
-cd frontend/backoffice && npm run dev  # :3001
-cd frontend/admin    && npm run dev    # :3002
+cd frontend/customer   && npm run dev   # :3000
+cd frontend/backoffice && npm run dev   # :3001
+cd frontend/admin      && npm run dev   # :3002
 ```
