@@ -126,18 +126,13 @@ export default function Register({ onSwitchToLogin }) {
 
         {/* Header */}
         <div style={{marginBottom:28}}>
-          <div style={{width:36,height:36,background:'var(--accent)',borderRadius:8,marginBottom:16,display:'flex',alignItems:'center',justifyContent:'center'}}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-              <circle cx="12" cy="7" r="4"/>
-            </svg>
-          </div>
+          <img src="/logo-dark.svg" alt="PayLedger" style={{height:32,display:'block',marginBottom:16}} />
           <h1 style={{fontSize:20,fontWeight:600,letterSpacing:'-0.01em'}}>
             {step === 1 ? 'Create account' : 'Verify your phone'}
           </h1>
           <p style={{fontSize:13,color:'var(--muted)',marginTop:4}}>
             {step === 1
-              ? 'PayLedger · Customer Portal'
+              ? 'Customer Portal'
               : `OTP sent to ${phone}. Enter it below.`}
           </p>
         </div>

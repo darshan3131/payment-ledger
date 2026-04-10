@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 60" width="240" height="60">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#818cf8;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#a78bfa;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Icon -->
+  <rect x="0" y="8" width="44" height="44" rx="10" ry="10" fill="url(#grad)" />
+
+  <!-- Ledger lines -->
+  <line x1="9" y1="22" x2="35" y2="22" stroke="white" stroke-width="2.2" stroke-linecap="round" opacity="0.5"/>
+  <line x1="9" y1="30" x2="35" y2="30" stroke="white" stroke-width="2.2" stroke-linecap="round" opacity="0.9"/>
+  <line x1="9" y1="38" x2="35" y2="38" stroke="white" stroke-width="2.2" stroke-linecap="round" opacity="0.5"/>
+  <line x1="22" y1="16" x2="22" y2="44" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+  <polyline points="12,27 16,23 20,27" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+  <polyline points="25,33 29,37 33,33" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Wordmark — white on dark -->
+  <text x="52" y="34" font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-size="22" font-weight="700" letter-spacing="-0.5" fill="url(#grad)">Pay</text>
+  <text x="88" y="34" font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-size="22" font-weight="300" letter-spacing="-0.3" fill="#f1f5f9">Ledger</text>
+
+  <!-- Tagline -->
+  <text x="52" y="47" font-family="'Inter', 'Segoe UI', system-ui, sans-serif" font-size="9" font-weight="400" fill="#94a3b8" letter-spacing="0.8">DISTRIBUTED · DOUBLE-ENTRY</text>
+</svg>

@@ -66,14 +66,8 @@ export default function App() {
         display:'flex', flexDirection:'column'
       }}>
         <div style={{padding:'8px 16px 20px',borderBottom:'1px solid var(--border)'}}>
-          <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:12}}>
-            <div style={{width:24,height:24,background:'#d97706',borderRadius:5,display:'flex',alignItems:'center',justifyContent:'center'}}>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="3"/>
-                <path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
-              </svg>
-            </div>
-            <span style={{fontSize:13,fontWeight:600}}>PayLedger</span>
+          <div style={{marginBottom:12}}>
+            <img src="/logo-dark.svg" alt="PayLedger" style={{height:28,display:'block'}} />
           </div>
           <div style={{display:'flex',alignItems:'center',gap:8}}>
             <div style={{width:26,height:26,borderRadius:'50%',background:'var(--surface2)',border:'1px solid var(--border)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:600,color:'var(--muted)'}}>

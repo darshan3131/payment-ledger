@@ -72,13 +72,8 @@ export default function App() {
         display:'flex', flexDirection:'column'
       }}>
         <div style={{padding:'8px 16px 20px',borderBottom:'1px solid var(--border)'}}>
-          <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:12}}>
-            <div style={{width:24,height:24,background:'#22c55e',borderRadius:5,display:'flex',alignItems:'center',justifyContent:'center'}}>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
-              </svg>
-            </div>
-            <span style={{fontSize:13,fontWeight:600}}>PayLedger</span>
+          <div style={{marginBottom:12}}>
+            <img src="/logo-dark.svg" alt="PayLedger" style={{height:28,display:'block'}} />
           </div>
           <div style={{display:'flex',alignItems:'center',gap:8}}>
             <div style={{width:26,height:26,borderRadius:'50%',background:'var(--surface2)',border:'1px solid var(--border)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:600,color:'var(--muted)'}}>

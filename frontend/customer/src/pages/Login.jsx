@@ -28,14 +28,9 @@ export default function Login({ onLogin, onSwitchToRegister, onForgotPassword })
       <div style={{width:'100%',maxWidth:360}}>
 
         <div style={{marginBottom:32}}>
-          <div style={{width:36,height:36,background:'var(--accent)',borderRadius:8,marginBottom:20,display:'flex',alignItems:'center',justifyContent:'center'}}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="2" y="5" width="20" height="14" rx="2"/>
-              <line x1="2" y1="10" x2="22" y2="10"/>
-            </svg>
-          </div>
+          <img src="/logo-dark.svg" alt="PayLedger" style={{height:36,marginBottom:20,display:'block'}} />
           <h1 style={{fontSize:20,fontWeight:600,letterSpacing:'-0.01em'}}>Sign in</h1>
-          <p style={{fontSize:13,color:'var(--muted)',marginTop:4}}>PayLedger · Customer Portal</p>
+          <p style={{fontSize:13,color:'var(--muted)',marginTop:4}}>Customer Portal</p>
         </div>
 
         {error && (
