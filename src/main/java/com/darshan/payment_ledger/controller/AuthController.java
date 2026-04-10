@@ -34,6 +34,11 @@ public class AuthController {
     private final OtpService otpService;
     private final SmsService smsService;
 
+    // Mirror the OTP dev-mode flag so the controller can expose it in API responses.
+    // When true, all OTPs are fixed to "123456" — no real SMS is sent.
+    @org.springframework.beans.factory.annotation.Value("${otp.dev-mode:true}")
+    private boolean otpDevMode;
+
     // POST /api/v1/auth/login
     // Takes username + password → returns JWT token
     @PostMapping("/login")
@@ -172,6 +177,16 @@ public class AuthController {
             String message = "Your PayLedger registration OTP is: " + otp + ". Valid for 5 minutes. Do not share.";
             smsService.send(phone, message);
             log.info("Registration OTP sent to phone ending ...{}", phone.length() > 4 ? phone.substring(phone.length() - 4) : "****");
+        }
+
+        // DEV MODE: return the hardcoded OTP in the response so the frontend can auto-fill it.
+        // In production (OTP_DEV_MODE=false + real SMS), devOtp is omitted from the response.
+        if (otpDevMode) {
+            return ResponseEntity.ok(Map.of(
+                "message", "If that number is available, an OTP has been sent.",
+                "devOtp",  "123456",
+                "devNote", "OTP_DEV_MODE is active — real SMS not sent"
+            ));
         }
         return ResponseEntity.ok(Map.of("message", "If that number is available, an OTP has been sent."));
     }

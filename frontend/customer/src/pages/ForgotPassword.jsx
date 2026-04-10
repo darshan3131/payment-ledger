@@ -8,7 +8,7 @@ import { forgotPassword, resetPassword } from '../services/api'
 export default function ForgotPassword({ onSwitchToLogin, accentColor = 'var(--accent)' }) {
   const [step,        setStep]        = useState(1)   // 1 = enter phone, 2 = enter OTP + new password
   const [phone,       setPhone]       = useState('')
-  const [otp,         setOtp]         = useState('')
+  const [otp,         setOtp]         = useState('123456') // DEV MODE: pre-filled, real SMS disabled
   const [newPassword, setNewPassword] = useState('')
   const [confirm,     setConfirm]     = useState('')
   const [loading,     setLoading]     = useState(false)
@@ -101,6 +101,11 @@ export default function ForgotPassword({ onSwitchToLogin, accentColor = 'var(--a
           <p style={{fontSize:13,color:'var(--muted)',marginTop:4}}>
             {step === 1 ? 'Enter your registered phone number' : `OTP sent to ${phone}`}
           </p>
+          {step === 2 && (
+            <div style={{marginTop:8,background:'rgba(234,179,8,0.08)',border:'1px solid rgba(234,179,8,0.25)',borderRadius:6,padding:'6px 10px',fontSize:12,color:'#ca8a04',display:'inline-flex',alignItems:'center',gap:5}}>
+              <span>⚡</span><span><strong>Dev mode</strong> — OTP auto-filled (123456). Real SMS disabled.</span>
+            </div>
+          )}
         </div>
 
         {/* Step indicator */}

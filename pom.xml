@@ -112,6 +112,14 @@
 			<artifactId>spring-boot-starter-security</artifactId>
 		</dependency>
 
+		<!-- Actuator: exposes /actuator/health for Render health checks and uptime monitoring.
+			 Without this, Render has no way to verify the service is alive after deploy.
+			 We expose only /health — all other endpoints remain locked by SecurityConfig. -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
+		</dependency>
+
 		<!-- JWT (JSON Web Token) — 3 JARs needed:
 			 jjwt-api    = the interfaces you call (Jwts.builder(), Jwts.parser())
 			 jjwt-impl   = the actual implementation (runtime only, you don't import it)

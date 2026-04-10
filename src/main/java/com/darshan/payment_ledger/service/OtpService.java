@@ -45,7 +45,17 @@ public class OtpService {
 
     // Returns true if the provided OTP matches what's stored and deletes it immediately (one-time use).
     // Returns false if expired or wrong.
+    //
+    // DEV MODE short-circuit: if otp.dev-mode=true AND the submitted OTP is "123456",
+    // we return true immediately without touching Redis. This ensures dev/testing always
+    // works even when Redis is down or misconfigured (e.g. wrong SSL on Upstash).
     public boolean verifyAndConsume(String phone, String otp) {
+        if (devMode && DEV_OTP.equals(otp)) {
+            log.warn("⚠️  DEV MODE — OTP verification bypassed for phone ending ...{}",
+                    phone.length() > 4 ? phone.substring(phone.length() - 4) : "****");
+            return true;
+        }
+
         String key    = OTP_PREFIX + phone;
         String stored = redisTemplate.opsForValue().get(key);
         if (stored == null) {

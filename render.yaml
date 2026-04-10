@@ -18,16 +18,28 @@ services:
         fromDatabase:
           name: payment-ledger-db
           property: password
-      - key: SPRING_REDIS_HOST
+      # REDIS — must match placeholder names in application.properties:
+      #   spring.data.redis.host=${REDIS_HOST:localhost}
+      #   spring.data.redis.port=${REDIS_PORT:6379}
+      #   spring.data.redis.password=${REDIS_PASSWORD:}
+      #   spring.data.redis.ssl.enabled=${REDIS_SSL:false}
+      # Upstash requires both a password and SSL (rediss:// protocol).
+      - key: REDIS_HOST
         fromService:
           name: payment-ledger-redis
           type: redis
           property: host
-      - key: SPRING_REDIS_PORT
+      - key: REDIS_PORT
         fromService:
           name: payment-ledger-redis
           type: redis
           property: port
+      # Set REDIS_PASSWORD and REDIS_SSL manually in Render dashboard
+      # (Render's fromService does not expose the password property for Redis)
+      # REDIS_PASSWORD = your Upstash Redis password
+      # REDIS_SSL      = true   (Upstash requires TLS)
+      - key: OTP_DEV_MODE
+        value: "true"   # flip to false when Twilio SMS is configured
       - key: JWT_SECRET
         generateValue: true
       - key: JWT_EXPIRATION

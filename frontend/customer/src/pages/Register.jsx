@@ -18,11 +18,12 @@ export default function Register({ onSwitchToLogin }) {
   // Step 2 fields
   const [otp, setOtp] = useState('')
 
-  const [step,    setStep]    = useState(1)   // 1 = fill details, 2 = enter OTP
-  const [loading, setLoading] = useState(false)
-  const [cooldown, setCooldown] = useState(0)
-  const [error,   setError]   = useState('')
-  const [success, setSuccess] = useState(false)
+  const [step,      setStep]      = useState(1)   // 1 = fill details, 2 = enter OTP
+  const [loading,   setLoading]   = useState(false)
+  const [cooldown,  setCooldown]  = useState(0)
+  const [error,     setError]     = useState('')
+  const [success,   setSuccess]   = useState(false)
+  const [isDevMode, setIsDevMode] = useState(false) // true when backend returns devOtp
 
   // ── Step 1 → Step 2: validate then send OTP ───────
   async function handleSendOtp(e) {
@@ -38,7 +39,12 @@ export default function Register({ onSwitchToLogin }) {
 
     setLoading(true)
     try {
-      await registerSendOtp(phone.trim())
+      const res = await registerSendOtp(phone.trim())
+      // DEV MODE: backend returns devOtp when OTP_DEV_MODE=true — auto-fill the field
+      if (res?.data?.devOtp) {
+        setOtp(res.data.devOtp)
+        setIsDevMode(true)
+      }
       setStep(2)
       startCooldown()
     } catch (err) {
@@ -58,7 +64,8 @@ export default function Register({ onSwitchToLogin }) {
     setError('')
     setLoading(true)
     try {
-      await registerSendOtp(phone.trim())
+      const res = await registerSendOtp(phone.trim())
+      if (res?.data?.devOtp) { setOtp(res.data.devOtp); setIsDevMode(true) }
       startCooldown()
     } catch (err) {
       setError('Failed to resend OTP.')
@@ -176,6 +183,14 @@ export default function Register({ onSwitchToLogin }) {
         {/* ── STEP 2 ── */}
         {step === 2 && (
           <form onSubmit={handleRegister} style={{display:'flex',flexDirection:'column',gap:14}}>
+
+            {isDevMode && (
+              <div style={{background:'rgba(234,179,8,0.08)',border:'1px solid rgba(234,179,8,0.25)',borderRadius:8,padding:'8px 12px',fontSize:12,color:'#ca8a04',display:'flex',alignItems:'center',gap:6}}>
+                <span>⚡</span>
+                <span><strong>Dev mode</strong> — OTP auto-filled. Real SMS disabled.</span>
+              </div>
+            )}
+
             <div>
               <label style={lbl}>6-digit OTP</label>
               <input

@@ -46,8 +46,6 @@ frontend/*/dist/
 .DS_Store
 *.log
 
-### Cowork tool (internal) ###
-.opencode/
-.gitattributes
+
 
 .claude/
