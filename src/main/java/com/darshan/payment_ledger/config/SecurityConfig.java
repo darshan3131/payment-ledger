@@ -143,7 +143,9 @@ public class SecurityConfig {
         org.springframework.web.cors.CorsConfiguration config = new org.springframework.web.cors.CorsConfiguration();
 
         config.setAllowedOrigins(java.util.List.of(
-                "https://payment-ledger-6rqk.vercel.app"
+                "https://payment-ledger-6rqk.vercel.app",   // customer portal
+                "https://payment-ledger-5qx9.vercel.app",   // backoffice portal
+                "https://payment-ledger-bt73.vercel.app"    // admin portal
         ));
 
         config.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));

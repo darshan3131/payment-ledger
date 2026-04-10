@@ -41,8 +41,9 @@ export default function Register({ onSwitchToLogin }) {
     try {
       const res = await registerSendOtp(phone.trim())
       // DEV MODE: backend returns devOtp when OTP_DEV_MODE=true — auto-fill the field
-      if (res?.data?.devOtp) {
-        setOtp(res.data.devOtp)
+      // registerSendOtp already unwraps r.data, so use res.devOtp (not res.data.devOtp)
+      if (res?.devOtp) {
+        setOtp(res.devOtp)
         setIsDevMode(true)
       }
       setStep(2)
@@ -65,7 +66,7 @@ export default function Register({ onSwitchToLogin }) {
     setLoading(true)
     try {
       const res = await registerSendOtp(phone.trim())
-      if (res?.data?.devOtp) { setOtp(res.data.devOtp); setIsDevMode(true) }
+      if (res?.devOtp) { setOtp(res.devOtp); setIsDevMode(true) }
       startCooldown()
     } catch (err) {
       setError('Failed to resend OTP.')
