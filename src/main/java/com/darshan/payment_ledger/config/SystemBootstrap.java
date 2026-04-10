@@ -48,28 +48,41 @@ public class SystemBootstrap implements CommandLineRunner {
         }
 
         // ── Default ADMIN user ────────────────────────────────────────────────
-        // Only seeded once. Change password immediately after first login.
-        if (!userRepository.existsByUsername("admin")) {
-            User admin = User.builder()
-                    .username("admin")
-                    .password(passwordEncoder.encode("Admin@1234"))
-                    .role(Role.ADMIN)
-                    .enabled(true)
-                    .build();
-            userRepository.save(admin);
-            log.warn("Seeded default ADMIN user (username=admin). Change password immediately.");
-        }
+        // Create if missing OR repair if password is not a valid BCrypt hash.
+        // BCrypt hashes always start with $2a$ or $2b$. Anything else means
+        // the user was created with plain-text (e.g. a manual DB insert) and
+        // Spring Security will refuse to authenticate it.
+        seedOrRepair("admin",      "Admin@1234",      Role.ADMIN);
+        seedOrRepair("backoffice1","Backoffice@1234",  Role.BACKOFFICE);
+    }
 
-        // ── Default BACKOFFICE user ───────────────────────────────────────────
-        if (!userRepository.existsByUsername("backoffice1")) {
-            User bo = User.builder()
-                    .username("backoffice1")
-                    .password(passwordEncoder.encode("Backoffice@1234"))
-                    .role(Role.BACKOFFICE)
-                    .enabled(true)
-                    .build();
-            userRepository.save(bo);
-            log.warn("Seeded default BACKOFFICE user (username=backoffice1).");
-        }
+    // ── Helper ────────────────────────────────────────────────────────────────
+    // Creates the user if absent, OR re-hashes the password if the stored value
+    // is not a valid BCrypt hash (happens when a user was inserted manually with
+    // plain-text).  BCrypt hashes always start with $2a$ or $2b$.
+    private void seedOrRepair(String username, String rawPassword, Role role) {
+        userRepository.findByUsername(username).ifPresentOrElse(
+            existing -> {
+                String stored = existing.getPassword();
+                if (stored != null && (stored.startsWith("$2a$") || stored.startsWith("$2b$"))) {
+                    // Already a valid BCrypt hash — nothing to do.
+                    return;
+                }
+                // Plain-text or garbage hash: re-encode and save.
+                existing.setPassword(passwordEncoder.encode(rawPassword));
+                userRepository.save(existing);
+                log.warn("Fixed non-BCrypt password for user '{}'.", username);
+            },
+            () -> {
+                // User doesn't exist at all — create from scratch.
+                User u = User.builder()
+                        .username(username)
+                        .password(passwordEncoder.encode(rawPassword))
+                        .role(role)
+                        .build();
+                userRepository.save(u);
+                log.info("Seeded default user '{}'.", username);
+            }
+        );
     }
 }
