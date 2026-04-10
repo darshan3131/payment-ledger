@@ -12,12 +12,14 @@ export default function App() {
     const user  = getUser()
     return (token && user) ? user : null
   })
-  const [account,   setAccount]   = useState(null)
-  const [allAccounts, setAllAccounts] = useState([])
-  const [page,      setPage]      = useState('login') // 'login' | 'register' | 'forgot'
+  const [account,        setAccount]        = useState(null)
+  const [allAccounts,    setAllAccounts]    = useState([])
+  const [accountsLoading, setAccountsLoading] = useState(false) // prevents NoAccount flash
+  const [page,           setPage]           = useState('login') // 'login' | 'register' | 'forgot'
 
   async function handleLogin(data) {
     setAuthUser(data)
+    setAccountsLoading(true)
     try {
       const accounts = await getMyAccounts()
       setAllAccounts(accounts)
@@ -25,12 +27,14 @@ export default function App() {
       else setAccount(null)
     } catch {
       setAccount(null)
+    } finally {
+      setAccountsLoading(false)
     }
   }
 
   function handleLogout() {
     clearToken(); clearUser()
-    setAuthUser(null); setAccount(null); setAllAccounts([]); setPage('login')
+    setAuthUser(null); setAccount(null); setAllAccounts([]); setPage('login'); setAccountsLoading(false)
   }
 
   if (!authUser) {
@@ -38,6 +42,15 @@ export default function App() {
     if (page === 'forgot')   return <ForgotPassword onSwitchToLogin={() => setPage('login')} />
     return <Login onLogin={handleLogin} onSwitchToRegister={() => setPage('register')} onForgotPassword={() => setPage('forgot')} />
   }
+
+  // Show spinner while fetching accounts — prevents premature NoAccount screen
+  if (accountsLoading) return (
+    <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',flexDirection:'column',gap:12}}>
+      <div style={{width:32,height:32,border:'2px solid var(--border)',borderTopColor:'var(--accent)',borderRadius:'50%',animation:'spin 0.7s linear infinite'}} />
+      <div style={{fontSize:13,color:'var(--muted)'}}>Loading your account…</div>
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+    </div>
+  )
 
   if (!account) return <NoAccount user={authUser} onLogout={handleLogout} />
 

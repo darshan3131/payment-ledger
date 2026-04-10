@@ -130,15 +130,25 @@ public class TransactionService {
 
         ledgerEntryRepository.save(debitEntry);
 
-        // STEP 7: Credit destination
-        destination.setBalance(destination.getBalance() + request.getAmount());
+        // STEP 7: Credit destination — apply FX conversion when currencies differ
+        long creditAmount = com.darshan.payment_ledger.util.CurrencyConverter.convert(
+                request.getAmount(), source.getCurrency(), destination.getCurrency());
+        if (source.getCurrency() != destination.getCurrency()) {
+            log.info("FX conversion: {} → {} at rate {} (debit={} subunits, credit={} subunits)",
+                    source.getCurrency(), destination.getCurrency(),
+                    com.darshan.payment_ledger.util.CurrencyConverter.rateDescription(
+                            source.getCurrency(), destination.getCurrency()),
+                    request.getAmount(), creditAmount);
+        }
+
+        destination.setBalance(destination.getBalance() + creditAmount);
         accountRepository.save(destination);
 
         LedgerEntry creditEntry = LedgerEntry.builder()
                 .transaction(transaction)
                 .account(destination)
                 .entryType("CREDIT")
-                .amount(request.getAmount())
+                .amount(creditAmount)
                 .currency(destination.getCurrency())
                 .build();
 

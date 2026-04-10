@@ -328,9 +328,9 @@ export default function Dashboard({ account: initialAccount, allAccounts = [], o
                   <input style={input} value={dst} onChange={e=>setDst(e.target.value)} placeholder="ACC…" />
                 </div>
                 <div>
-                  <label style={label}>Amount (paise)</label>
-                  <input style={input} type="number" value={amount} onChange={e=>setAmount(e.target.value)} placeholder="e.g. 50000 = ₹500.00" min="1" />
-                  {amount > 0 && <div style={{fontSize:11,color:'var(--accent)',marginTop:5}}>= ₹{(parseInt(amount)/100).toFixed(2)}</div>}
+                  <label style={label}>Amount (subunits — 100 = 1 {account.currency})</label>
+                  <input style={input} type="number" value={amount} onChange={e=>setAmount(e.target.value)} placeholder={`e.g. 50000 = 500.00 ${account.currency}`} min="1" />
+                  {amount > 0 && <div style={{fontSize:11,color:'var(--accent)',marginTop:5}}>= {account.currency} {(parseInt(amount)/100).toFixed(2)}</div>}
                 </div>
                 <div>
                   <label style={label}>Type</label>
