@@ -56,6 +56,7 @@ public class SecurityConfig {
                 // PUBLIC endpoints — no token required
                 .requestMatchers("/api/v1/auth/**").permitAll()     // login, register
                 .requestMatchers("/").permitAll()                   // portal selector HTML
+                    .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/customer/**", "/backoffice/**", "/admin/**").permitAll()  // static HTML
 
                 // CUSTOMER endpoints — any authenticated user (customer, backoffice, admin)
