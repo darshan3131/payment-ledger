@@ -148,7 +148,7 @@ public class SecurityConfig {
                 "https://payment-ledger-bt73.vercel.app"    // admin portal
         ));
 
-        config.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(java.util.List.of("*"));
         config.setAllowCredentials(true);
 
