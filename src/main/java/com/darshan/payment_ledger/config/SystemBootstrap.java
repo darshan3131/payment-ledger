@@ -64,14 +64,17 @@ public class SystemBootstrap implements CommandLineRunner {
         userRepository.findByUsername(username).ifPresentOrElse(
             existing -> {
                 String stored = existing.getPassword();
-                if (stored != null && (stored.startsWith("$2a$") || stored.startsWith("$2b$"))) {
-                    // Already a valid BCrypt hash — nothing to do.
+                boolean isValidBcrypt = stored != null
+                        && (stored.startsWith("$2a$") || stored.startsWith("$2b$"));
+                // If the stored hash is valid BCrypt AND matches the expected password → nothing to do.
+                // If it's non-BCrypt OR the hash doesn't match the expected seed password,
+                // re-encode and save.  This self-heals any password mismatch on every boot.
+                if (isValidBcrypt && passwordEncoder.matches(rawPassword, stored)) {
                     return;
                 }
-                // Plain-text or garbage hash: re-encode and save.
                 existing.setPassword(passwordEncoder.encode(rawPassword));
                 userRepository.save(existing);
-                log.warn("Fixed non-BCrypt password for user '{}'.", username);
+                log.warn("Reset password for user '{}' (was non-BCrypt or hash mismatch).", username);
             },
             () -> {
                 // User doesn't exist at all — create from scratch.
