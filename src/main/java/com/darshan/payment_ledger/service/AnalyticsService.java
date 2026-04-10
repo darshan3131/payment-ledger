@@ -2,10 +2,12 @@ package com.darshan.payment_ledger.service;
 
 import com.darshan.payment_ledger.dto.AnalyticsResponse;
 import com.darshan.payment_ledger.entity.Transaction;
+import com.darshan.payment_ledger.enums.AccountStatus;
 import com.darshan.payment_ledger.enums.Currency;
 import com.darshan.payment_ledger.enums.TransactionStatus;
 import com.darshan.payment_ledger.repository.AccountRepository;
 import com.darshan.payment_ledger.repository.TransactionRepository;
+import com.darshan.payment_ledger.util.CurrencyConverter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -24,27 +26,29 @@ public class AnalyticsService {
 
     @Transactional(readOnly = true)
     public AnalyticsResponse getAnalytics() {
-        List<Transaction> allTx = transactionRepository.findAll();
+        // JOIN FETCH — loads source and destination accounts in a single query,
+        // eliminating the 2N SELECT N+1 that LAZY loading would trigger during the stream.
+        List<Transaction> allTx = transactionRepository.findAllWithAccounts();
         long totalAccounts  = accountRepository.count();
-        long activeAccounts = accountRepository.findAll().stream()
-                .filter(a -> a.getStatus().name().equals("ACTIVE")).count();
+        long activeAccounts = accountRepository.countByStatus(AccountStatus.ACTIVE);
 
-        // Volume + counts
+        // Volume + counts — normalize all amounts to INR for cross-currency aggregation
         long totalVolume = allTx.stream()
                 .filter(t -> t.getStatus() == TransactionStatus.COMPLETED)
-                .mapToLong(Transaction::getAmount).sum();
+                .mapToLong(t -> CurrencyConverter.convert(t.getAmount(), t.getCurrency(), Currency.INR))
+                .sum();
 
         long completed = allTx.stream().filter(t -> t.getStatus() == TransactionStatus.COMPLETED).count();
         long pending   = allTx.stream().filter(t -> t.getStatus() == TransactionStatus.PENDING).count();
         long failed    = allTx.stream().filter(t -> t.getStatus() == TransactionStatus.FAILED).count();
         long avgSize   = completed > 0 ? totalVolume / completed : 0;
 
-        // Volume by type
+        // Volume by type — normalize each transaction to INR so types can be compared
         Map<String, Long> volumeByType = allTx.stream()
                 .filter(t -> t.getStatus() == TransactionStatus.COMPLETED)
                 .collect(Collectors.groupingBy(
                         t -> t.getType().name(),
-                        Collectors.summingLong(Transaction::getAmount)
+                        Collectors.summingLong(t -> CurrencyConverter.convert(t.getAmount(), t.getCurrency(), Currency.INR))
                 ));
 
         // Count by status
@@ -65,11 +69,13 @@ public class AnalyticsService {
                 .map(e -> {
                     Transaction sample = e.getValue().get(0);
                     long total = e.getValue().stream().mapToLong(Transaction::getAmount).sum();
+                    // Format using the source account's actual currency
+                    Currency srcCurrency = sample.getSourceAccount().getCurrency();
                     return AnalyticsResponse.TopAccount.builder()
                             .accountNumber(e.getKey())
                             .holderName(sample.getSourceAccount().getHolderName())
                             .totalAmount(total)
-                            .formattedAmount(Currency.INR.format(total))
+                            .formattedAmount(srcCurrency.format(total))
                             .count(e.getValue().size())
                             .build();
                 })
@@ -88,11 +94,13 @@ public class AnalyticsService {
                 .map(e -> {
                     Transaction sample = e.getValue().get(0);
                     long total = e.getValue().stream().mapToLong(Transaction::getAmount).sum();
+                    // Format using the destination account's actual currency
+                    Currency dstCurrency = sample.getDestinationAccount().getCurrency();
                     return AnalyticsResponse.TopAccount.builder()
                             .accountNumber(e.getKey())
                             .holderName(sample.getDestinationAccount().getHolderName())
                             .totalAmount(total)
-                            .formattedAmount(Currency.INR.format(total))
+                            .formattedAmount(dstCurrency.format(total))
                             .count(e.getValue().size())
                             .build();
                 })

@@ -16,7 +16,7 @@ A full-stack payment management system simulating real-world banking operations 
 |--------|-----|-------------|
 | 🧑 Customer | `localhost:3000` | Register via OTP |
 | 🏦 Backoffice | `localhost:3001` | Created by Admin |
-| 🔐 Admin | `localhost:3002` | `admin / Admin@123` |
+| 🔐 Admin | `localhost:3002` | `admin / Admin@1234` |
 
 > **OTP in dev mode is always `123456`**
 

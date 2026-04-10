@@ -18,6 +18,12 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
 
     Optional<Transaction> findByReferenceId(String referenceId);
 
+    // Used by AnalyticsService — JOIN FETCH eliminates the N+1 that occurs when the analytics
+    // stream accesses sourceAccount/destinationAccount on LAZY-loaded associations.
+    // Without this, loading N transactions fires 2N additional SELECT queries (one per account per side).
+    @Query("SELECT t FROM Transaction t JOIN FETCH t.sourceAccount JOIN FETCH t.destinationAccount")
+    List<Transaction> findAllWithAccounts();
+
     List<Transaction> findBySourceAccountId(Long accountId);
 
     List<Transaction> findByDestinationAccountId(Long accountId);

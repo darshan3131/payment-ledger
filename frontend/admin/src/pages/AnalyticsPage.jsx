@@ -101,7 +101,7 @@ export default function AnalyticsPage() {
                   <span style={{fontSize:13}}>{type}</span>
                   <div style={{display:'flex',alignItems:'center',gap:8}}>
                     <span style={{fontSize:13,color:'var(--muted)'}}>{countByStatus?.[type] || ''}</span>
-                    <span style={{fontSize:13,fontWeight:600,color:'rgb(99,102,241)'}}>{fmtAmt('₹' + (amount/100).toLocaleString('en-IN',{minimumFractionDigits:2}))}</span>
+                    <span style={{fontSize:13,fontWeight:600,color:'rgb(99,102,241)'}}>{'₹' + (amount/100).toLocaleString('en-IN',{minimumFractionDigits:2})}</span>
                   </div>
                 </div>
               ))

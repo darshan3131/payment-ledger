@@ -19,7 +19,6 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/support")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 public class SupportTicketController {
 
     private final SupportTicketService service;

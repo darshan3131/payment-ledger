@@ -23,7 +23,6 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/accounts")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 public class AccountController {
 
     private final AccountService accountService;

@@ -69,12 +69,13 @@ public class SystemBootstrap implements CommandLineRunner {
                 // If the stored hash is valid BCrypt AND matches the expected password → nothing to do.
                 // If it's non-BCrypt OR the hash doesn't match the expected seed password,
                 // re-encode and save.  This self-heals any password mismatch on every boot.
-                if (isValidBcrypt && passwordEncoder.matches(rawPassword, stored)) {
+                if (isValidBcrypt && passwordEncoder.matches(rawPassword, stored) && existing.isEnabled()) {
                     return;
                 }
                 existing.setPassword(passwordEncoder.encode(rawPassword));
+                existing.setEnabled(true);  // always restore — a disabled seed user locks everyone out
                 userRepository.save(existing);
-                log.warn("Reset password for user '{}' (was non-BCrypt or hash mismatch).", username);
+                log.warn("Reset password/enabled flag for user '{}' (was non-BCrypt, hash mismatch, or disabled).", username);
             },
             () -> {
                 // User doesn't exist at all — create from scratch.

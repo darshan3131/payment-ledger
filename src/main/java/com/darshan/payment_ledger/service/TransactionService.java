@@ -409,20 +409,32 @@ public class TransactionService {
         Account source      = original.getSourceAccount();
         Account destination = original.getDestinationAccount();
 
-        // Check destination still has the funds
-        if (destination.getBalance() < original.getAmount()) {
+        // For cross-currency transfers the original DEBIT was in source.getCurrency()
+        // but the CREDIT was FX-converted into destination.getCurrency(). The reversal
+        // must deduct the converted (credited) amount from the destination account —
+        // NOT the raw source-currency amount. Using the raw amount here would corrupt
+        // destination.balance when src and dst currencies differ (e.g. INR→USD).
+        long originalDebitAmount  = original.getAmount();                          // in source currency
+        long originalCreditAmount = com.darshan.payment_ledger.util.CurrencyConverter.convert(
+                originalDebitAmount, original.getCurrency(), destination.getCurrency()); // in dst currency
+
+        // Balance check in destination's own currency
+        if (destination.getBalance() < originalCreditAmount) {
             throw new InsufficientBalanceException(
                     "Destination account has insufficient funds for reversal. Balance: "
-                    + destination.getCurrency().format(destination.getBalance()));
+                    + destination.getCurrency().format(destination.getBalance())
+                    + ", Required: " + destination.getCurrency().format(originalCreditAmount));
         }
 
         String revRefId = "REV" + UUID.randomUUID().toString().replace("-", "").substring(0, 12).toUpperCase();
 
+        // Reversal transaction is recorded in the original source currency
+        // (same convention as the original — the debit-side amount drives the record).
         Transaction reversal = Transaction.builder()
                 .referenceId(revRefId)
-                .sourceAccount(destination)   // reversed: money goes back
+                .sourceAccount(destination)   // reversed: money flows back
                 .destinationAccount(source)
-                .amount(original.getAmount())
+                .amount(originalDebitAmount)
                 .currency(original.getCurrency())
                 .type(TransactionType.REVERSAL)
                 .status(TransactionStatus.PENDING)
@@ -430,17 +442,17 @@ public class TransactionService {
                 .build();
         reversal = transactionRepository.save(reversal);
 
-        // Debit destination (takes money back)
-        destination.setBalance(destination.getBalance() - original.getAmount());
+        // Debit destination (takes back what was originally credited, in dst currency)
+        destination.setBalance(destination.getBalance() - originalCreditAmount);
         accountRepository.save(destination);
         ledgerEntryRepository.save(LedgerEntry.builder().transaction(reversal).account(destination)
-                .entryType("DEBIT").amount(original.getAmount()).currency(original.getCurrency()).build());
+                .entryType("DEBIT").amount(originalCreditAmount).currency(destination.getCurrency()).build());
 
-        // Credit source (returns money)
-        source.setBalance(source.getBalance() + original.getAmount());
+        // Credit source (returns what was originally debited, in src currency)
+        source.setBalance(source.getBalance() + originalDebitAmount);
         accountRepository.save(source);
         ledgerEntryRepository.save(LedgerEntry.builder().transaction(reversal).account(source)
-                .entryType("CREDIT").amount(original.getAmount()).currency(original.getCurrency()).build());
+                .entryType("CREDIT").amount(originalDebitAmount).currency(source.getCurrency()).build());
 
         reversal.setStatus(TransactionStatus.COMPLETED);
         reversal = transactionRepository.save(reversal);
@@ -449,10 +461,11 @@ public class TransactionService {
         original.setStatus(TransactionStatus.REVERSED);
         transactionRepository.save(original);
 
-        // Notify both parties
-        String fmtAmt = original.getCurrency().format(original.getAmount());
-        notifyUser(source,      "Reversal: " + fmtAmt + " returned to your account. Ref: " + revRefId);
-        notifyUser(destination, "Reversal: " + fmtAmt + " deducted from your account. Ref: " + revRefId);
+        // Notify both parties — use each account's own currency for the SMS amount
+        notifyUser(source,      "Reversal: " + source.getCurrency().format(originalDebitAmount)
+                + " returned to your account. Ref: " + revRefId);
+        notifyUser(destination, "Reversal: " + destination.getCurrency().format(originalCreditAmount)
+                + " deducted from your account. Ref: " + revRefId);
 
         log.info("Reversed {} → new ref {}", referenceId, revRefId);
         return toResponse(reversal);

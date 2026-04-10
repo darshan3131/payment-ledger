@@ -15,6 +15,11 @@ const td  = { padding:'12px 16px', borderBottom:'1px solid var(--border)', fontS
 
 const fmt = dt => dt ? new Date(dt).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}) : '—'
 
+const CURRENCY_SYMBOLS   = { INR:'₹', USD:'$', EUR:'€', GBP:'£', JPY:'¥', AED:'AED', SGD:'SGD', SAR:'SAR', CAD:'CAD', AUD:'AUD' }
+const CURRENCY_SUBUNITS  = { INR:'paise', USD:'cents', EUR:'cents', GBP:'pence', JPY:'sen', AED:'fils', SGD:'cents', SAR:'halalah', CAD:'cents', AUD:'cents' }
+const currSym    = (code) => CURRENCY_SYMBOLS[code]  || code || '₹'
+const currSubunit = (code) => CURRENCY_SUBUNITS[code] || 'subunits'
+
 function Badge({ status }) {
   const map = {
     ACTIVE:  { bg:'rgba(34,197,94,0.1)',  color:'#22c55e' },
@@ -90,11 +95,11 @@ function CashModal({ account, mode, onClose, onDone }) {
 
         <form onSubmit={handleSubmit} style={{display:'flex',flexDirection:'column',gap:12}}>
           <div>
-            <label style={lbl}>Amount (paise)</label>
-            <input type="number" min="1" value={amount} onChange={e=>setAmount(e.target.value)} placeholder="e.g. 100000 = ₹1,000" style={inp}/>
+            <label style={lbl}>Amount ({currSubunit(account.currency)})</label>
+            <input type="number" min="1" value={amount} onChange={e=>setAmount(e.target.value)} placeholder={`e.g. 100000 = ${currSym(account.currency)}1,000`} style={inp}/>
             {amount > 0 && (
               <div style={{fontSize:11,color:accent,marginTop:-8,marginBottom:8}}>
-                = ₹{(parseInt(amount)/100).toLocaleString('en-IN',{minimumFractionDigits:2})}
+                = {currSym(account.currency)}{(parseInt(amount)/100).toLocaleString('en-IN',{minimumFractionDigits:2})}
               </div>
             )}
           </div>
@@ -216,7 +221,7 @@ export default function AccountsPage() {
         <div style={{background:'var(--surface)',border:'1px solid var(--border)',borderRadius:10,padding:20}}>
           <div style={{fontSize:14,fontWeight:500,marginBottom:4}}>Open new account</div>
           <div style={{fontSize:12,color:'var(--muted)',marginBottom:16}}>
-            Select a verified customer. Account number is auto-generated. Balance starts at ₹0 — use Deposit to add funds.
+            Select a verified customer. Account number is auto-generated. Balance starts at 0 — use Deposit to add funds.
           </div>
           {createError && (
             <div style={{background:'rgba(239,68,68,0.08)',border:'1px solid rgba(239,68,68,0.2)',borderRadius:8,padding:'8px 12px',fontSize:13,color:'var(--red)',marginBottom:12}}>
