@@ -83,7 +83,7 @@ A production-grade, multi-portal payment system with double-entry accounting, OT
 
 ### Step 5 — Watch the Admin See Everything `[Tab 3: Admin]`
 
-1. Switch to the Admin tab
+1. Switch to the Admin tab-Login as `admin / Admin@1234`
 2. Go to **Analytics** — your deposits and transfers appear in the charts
    - Total Volume updated (FX-normalized to INR for cross-currency comparison)
    - Top Senders / Receivers table shows your account with `$` symbol
