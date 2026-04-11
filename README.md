@@ -152,30 +152,34 @@ Most portfolio projects stop at CRUD. PayLedger deliberately solves the hard pro
 
 ## 📸 Screenshots
 
+## 📸 Screenshots
+
+## 📸 Screenshots
+
 <table>
   <tr>
     <td align="center"><b>🔐 Admin · Analytics Dashboard</b></td>
     <td align="center"><b>👥 Admin · User Management</b></td>
   </tr>
   <tr>
-    <td><img src="docs/screenshots/admin-analytics.png" alt="Admin Analytics"/></td>
-    <td><img src="docs/screenshots/admin-users.png" alt="Admin Users"/></td>
+    <td><img src="https://github.com/user-attachments/assets/b7f449b0-e822-4cdb-9d41-289a6f0d25f1" width="1440" height="900" alt="Admin Analytics" style="max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 8px;" /></td>
+    <td><img src="https://github.com/user-attachments/assets/219aa53f-326b-4954-b06e-1af43a73f7de" width="1440" height="900" alt="Admin Users" style="max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 8px;" /></td>
   </tr>
   <tr>
     <td align="center"><b>🩺 Admin · System Health</b></td>
     <td align="center"><b>🏦 Backoffice · Accounts</b></td>
   </tr>
   <tr>
-    <td><img src="docs/screenshots/admin-system-health.png" alt="System Health"/></td>
-    <td><img src="docs/screenshots/backoffice-accounts.png" alt="Backoffice Accounts"/></td>
+    <td><img src="https://github.com/user-attachments/assets/1f8f62c5-dc0a-40fd-bc1f-49d74ad47ad0" width="1440" height="900" alt="System Health" style="max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 8px;" /></td>
+    <td><img src="https://github.com/user-attachments/assets/07fe0390-e0c6-4c8d-b8af-fc00ab687255" width="1440" height="900" alt="Backoffice Accounts" style="max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 8px;" /></td>
   </tr>
   <tr>
     <td align="center"><b>💸 Backoffice · Transactions</b></td>
     <td align="center"><b>🧑 Customer · Login</b></td>
   </tr>
   <tr>
-    <td><img src="docs/screenshots/backoffice-transactions.png" alt="Transactions"/></td>
-    <td><img src="docs/screenshots/customer-login.png" alt="Customer Login"/></td>
+    <td><img src="https://github.com/user-attachments/assets/8b5d62b0-006c-424f-bd3c-5161663dc2e7" width="1440" height="900" alt="Backoffice Transactions" style="max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 8px;" /></td>
+    <td><img src="https://github.com/user-attachments/assets/a89ac53b-de02-4630-9341-785e671bfaa3" width="1440" height="900" alt="Customer Login" style="max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 8px;" /></td>
   </tr>
 </table>
 
@@ -382,7 +386,7 @@ GET   /actuator/health               Service health (public)
 
 ## 👤 Author
 
-**K C Darshan Siddarth** · Full-Stack Developer · Bengaluru, India
+**K C Darshan** · Full-Stack Developer · Bengaluru, India
 
 [![GitHub](https://img.shields.io/badge/GitHub-darshan3131-181717?style=flat-square&logo=github)](https://github.com/darshan3131)
 [![Email](https://img.shields.io/badge/Email-darshansiddarth05%40gmail.com-EA4335?style=flat-square&logo=gmail&logoColor=white)](mailto:darshansiddarth05@gmail.com)
