@@ -27,11 +27,11 @@ public class OutboxPoller {
     // Per-send bound so a single publish never hangs the scheduled cycle.
     private static final long SEND_TIMEOUT_SECONDS = 5;
 
-    // Feature flag. When no Kafka broker is provisioned (e.g. the free-tier
-    // deployment), set KAFKA_ENABLED=false so the poller skips cleanly instead
-    // of throwing TimeoutExceptions every cycle. Events stay PENDING and will
-    // be relayed the moment a broker is available and the flag is flipped on.
-    @Value("${kafka.enabled:true}")
+    // Feature flag, DEFAULT FALSE. No Kafka broker is provisioned in any current
+    // deployment, so the poller skips cleanly by default — zero log noise. Events
+    // stay PENDING in the DB and relay automatically once KAFKA_ENABLED=true and
+    // a broker is reachable. Set to true only when a real broker is available.
+    @Value("${kafka.enabled:false}")
     private boolean kafkaEnabled;
 
     // Runs every 10 seconds after an initial 30-second delay.
