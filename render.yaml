@@ -46,6 +46,11 @@ services:
         value: "86400000"
       - key: SPRING_KAFKA_BOOTSTRAP_SERVERS
         value: "localhost:9092"
+      # No Kafka broker on the free tier — disable the relay so the OutboxPoller
+      # skips cleanly instead of logging publish timeouts every cycle. Transaction
+      # events still persist in the outbox table; flip to true once a broker exists.
+      - key: KAFKA_ENABLED
+        value: "false"
 
   # Customer frontend
   - type: web

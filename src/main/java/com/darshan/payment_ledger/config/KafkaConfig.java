@@ -49,6 +49,14 @@ public class KafkaConfig {
         // before giving up and throwing an exception.
         props.put(ProducerConfig.RETRIES_CONFIG, 3);
 
+        // Fail fast when the broker is unreachable. The default max.block.ms is
+        // 60s — that's why a missing broker froze the OutboxPoller for a full
+        // minute before throwing. 5s lets the poller catch the failure quickly,
+        // leave the event PENDING, and move on without hanging the scheduler.
+        props.put(ProducerConfig.MAX_BLOCK_MS_CONFIG, 5000);
+        props.put(ProducerConfig.DELIVERY_TIMEOUT_MS_CONFIG, 5000);
+        props.put(ProducerConfig.REQUEST_TIMEOUT_MS_CONFIG, 4000);
+
         return new DefaultKafkaProducerFactory<>(props);
     }
 
