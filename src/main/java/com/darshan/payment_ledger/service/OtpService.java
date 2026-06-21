@@ -32,8 +32,16 @@ public class OtpService {
     // Generates a 6-digit OTP, stores it in Redis with 5-minute expiry, returns the OTP string.
     // DEV MODE: always uses 123456. Set otp.dev-mode=false in application.properties for production.
     public String generateAndStore(String phone) {
-        String otp = devMode ? DEV_OTP : String.format("%06d", secureRandom.nextInt(1_000_000));
-        if (devMode) log.warn("⚠️  DEV MODE — OTP hardcoded to {} for all requests", DEV_OTP);
+        // DEV MODE: the OTP is always 123456 and verifyAndConsume() short-circuits it
+        // without Redis, so we don't touch Redis here at all. This keeps the entire OTP
+        // flow — registration, password reset, high-value transfers — working even when
+        // Redis is unavailable (e.g. a demo deployment without a Redis instance).
+        if (devMode) {
+            log.warn("⚠️  DEV MODE — OTP hardcoded to {} (Redis bypassed)", DEV_OTP);
+            return DEV_OTP;
+        }
+
+        String otp = String.format("%06d", secureRandom.nextInt(1_000_000));
         redisTemplate.opsForValue().set(
             OTP_PREFIX + phone,
             otp,
